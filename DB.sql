@@ -5,12 +5,14 @@ sqlite3 vine_DB.db
 
 CREATE TABLE IF NOT EXISTS Wine (
 id INTEGER PRIMARY KEY,
+wineMaker TEXT NOT NULL,
 wineName TEXT NOT NULL,
 grape TEXT NOT NULL,
 type TEXT NOT NULL CHECK (type IN ('Red', 'White', 'Rose', 'Sparkling', 'Dessert', 'Fortified')),
 year INTEGER,
 rating REAL,
-region TEXT
+region TEXT,
+notes TEXT
 );
 
 
@@ -26,10 +28,11 @@ email TEXT NOT NULL
 
 -- Insert dummy data into wine table
 
-INSERT INTO Wine (wineName, grape, type, year, rating, region) VALUES
-('Seven Hills', 'Chardonnay', 'White', 2018, 4.5, 'California'),
-('Favourite Wine', 'Merlot', 'Red', 2017, 4.0, 'Bordeaux'),
-('Wine Test', 'Pinot Noir', 'Red', 2019, 4.7, 'Burgundy');
+INSERT INTO Wine (wineMaker, wineName, grape, type, year, rating, region, notes) VALUES
+('Wine Maker', 'Seven Hills', 'Chardonnay', 'White', 2018, 4.5, 'California', 'Notes section'),
+('Wine Maker','Favourite Wine', 'Merlot', 'Red', 2017, 4.0, 'Bordeaux', 'Notes section'),
+('Wine Maker','Wine Test', 'Pinot Noir', 'Red', 2019, 4.7, 'Burgundy', 'This is a test wine'),
+('Wine Maker','Another Wine', 'Sauvignon Blanc', 'White', 2016, 4.2, 'New Zealand', 'This is another test wine');
 
   
 -- Insert dummy data into user table

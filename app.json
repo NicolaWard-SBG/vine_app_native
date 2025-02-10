@@ -14,7 +14,8 @@
       "backgroundColor": "#ffffff"
     },
     "ios": {
-      "supportsTablet": true
+      "supportsTablet": true,
+      "bundleIdentifier": "vine"
     },
     "android": {
       "adaptiveIcon": {
@@ -30,9 +31,11 @@
     "expo": {
       "entryPoint": "./node_modules/expo-router/entry"
     },
-    "plugins": [
-      "expo-sqlite",
-      "expo-asset"
-    ]
+    "plugins": ["expo-sqlite", "expo-asset"],
+    "extra": {
+      "eas": {
+        "projectId": "fe0a3f67-737b-41e1-9f01-e0c418c3be00"
+      }
+    }
   }
 }
