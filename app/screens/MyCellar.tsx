@@ -3,7 +3,6 @@ import { View, Text, FlatList, StyleSheet, Button, Alert } from "react-native";
 import { useSQLiteContext } from "expo-sqlite";
 import { Wine } from "../../types";
 import { Swipeable } from "react-native-gesture-handler";
-import FontAwesome from "react-native-vector-icons/FontAwesome";
 
 // MyCellar component
 function MyCellar() {
@@ -36,7 +35,7 @@ function MyCellar() {
   // added a useEffect to fetch data when the component mounts or when filterType changes
   useEffect(() => {
     fetchData();
-  }, [fetchData]);
+  }, [filterType]);
 
   // Function to delete a wine from the database
   const deleteWine = async (id: number) => {
@@ -96,20 +95,23 @@ function MyCellar() {
           data={wines}
           keyExtractor={(item) => item.id.toString()}
           renderItem={({ item }) => (
-            <Swipeable renderRightActions={() => renderRightActions(item.id)}>
-              <View style={styles.wineItem}>
-                <View style={styles.wineInfo}>
-                  <Text>{item.wineMaker}</Text>
-                  <Text style={styles.wineName}>{item.wineName}</Text>
-                  <Text>{item.grape}</Text>
-                  <Text>{item.type}</Text>
-                  <Text>{item.year}</Text>
-                  <Text>{item.rating}</Text>
-                  <Text>{item.region}</Text>
-                  <Text>{item.notes}</Text>
+            // Wrap each swipeable item in a container that clips its children
+            <View style={styles.swipeableItemWrapper}>
+              <Swipeable renderRightActions={() => renderRightActions(item.id)}>
+                <View style={styles.wineItem}>
+                  <View style={styles.wineInfo}>
+                    <Text>{item.wineMaker}</Text>
+                    <Text style={styles.wineName}>{item.wineName}</Text>
+                    <Text>{item.grape}</Text>
+                    <Text>{item.type}</Text>
+                    <Text>{item.year}</Text>
+                    <Text>{item.rating}</Text>
+                    <Text>{item.region}</Text>
+                    <Text>{item.notes}</Text>
+                  </View>
                 </View>
-              </View>
-            </Swipeable>
+              </Swipeable>
+            </View>
           )}
         />
       )}
@@ -135,15 +137,19 @@ const styles = StyleSheet.create({
     justifyContent: "space-around",
     marginBottom: 16,
   },
+  // New wrapper style to enforce rounded corners on the entire swipable item
+  swipeableItemWrapper: {
+    borderRadius: 16,
+    overflow: "hidden",
+    borderWidth: 1,
+    borderColor: "#ccc",
+    marginBottom: 10,
+  },
   wineItem: {
     flexDirection: "row",
     justifyContent: "space-between",
     alignItems: "center",
-    marginBottom: 10,
     padding: 10,
-    borderWidth: 1,
-    borderColor: "#ccc",
-    borderRadius: 16,
     backgroundColor: "#f9f9f9",
     height: 170,
   },
@@ -164,10 +170,12 @@ const styles = StyleSheet.create({
     justifyContent: "center",
     alignItems: "center",
     width: 80,
-    height: "100%",
     backgroundColor: "maroon",
-    borderRadius: 16,
+    // These radii ensure the delete button's right corners match the parent wrapper
+    borderTopRightRadius: 16,
+    borderBottomRightRadius: 16,
   },
 });
 
 export default MyCellar;
+
