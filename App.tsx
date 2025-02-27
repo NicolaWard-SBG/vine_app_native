@@ -7,8 +7,8 @@ import { NavigationContainer } from "@react-navigation/native";
 import Home from "./app/screens/Home";
 import MyCellar from "./app/screens/MyCellar";
 import { createBottomTabNavigator } from "@react-navigation/bottom-tabs";
-import Icon from "react-native-vector-icons/MaterialIcons";
 import { GestureHandlerRootView } from "react-native-gesture-handler";
+import Icon from "react-native-vector-icons/MaterialCommunityIcons";
 
 const Tab = createBottomTabNavigator();
 
@@ -63,24 +63,25 @@ export default function App() {
           }
         >
           <SQLiteProvider databaseName="vine_DB.db" useSuspense>
-            <Tab.Navigator
-              screenOptions={({ route }) => ({
-                tabBarIcon: ({ color, size }) => {
-                  let iconName: string = "";
-
-                  // Set the icon name based on the route name
-                  if (route.name === "Home") {
-                    iconName = "home";
-                  } else if (route.name === "MyCellar") {
-                    iconName = "bottle-wine";
-                  }
-
-                  return <Icon name={iconName} size={size} color={color} />;
-                },
-              })}
-            >
-              <Tab.Screen name="Home" component={Home} />
-              <Tab.Screen name="MyCellar" component={MyCellar} />
+            <Tab.Navigator>
+              <Tab.Screen
+                name="Home"
+                component={Home}
+                options={{
+                  tabBarIcon: ({ color, size }) => (
+                    <Icon name="home" size={size} color={color} />
+                  ),
+                }}
+              />
+              <Tab.Screen
+                name="MyCellar"
+                component={MyCellar}
+                options={{
+                  tabBarIcon: ({ color, size }) => (
+                    <Icon name="bottle-wine" size={size} color={color} />
+                  ),
+                }}
+              />
             </Tab.Navigator>
           </SQLiteProvider>
         </React.Suspense>
