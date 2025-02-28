@@ -8,12 +8,15 @@ import {
   Alert,
   SafeAreaView,
   Image,
+  Modal,
+  TouchableOpacity,
+  Keyboard,
 } from "react-native";
+import { Picker } from "@react-native-picker/picker";
 import { useSQLiteContext } from "expo-sqlite";
 
-// Home component
 export default function Home() {
-  const db = useSQLiteContext(); // Get the SQLite database context
+  const db = useSQLiteContext();
 
   // State for form inputs
   const [wineMaker, setWineMaker] = useState("");
@@ -25,9 +28,10 @@ export default function Home() {
   const [region, setRegion] = useState("");
   const [notes, setNotes] = useState("");
 
-  // Function to handle adding a new wine to the database
+  // State to control visibility of the modal
+  const [showTypePicker, setShowTypePicker] = useState(false);
+
   const handleAddWine = async () => {
-    // Check if the required fields are filled
     if (
       !wineMaker ||
       !wineName ||
@@ -41,23 +45,12 @@ export default function Home() {
       return;
     }
 
-    const validTypes = ["Red", "White", "Rose", "Sparkling", "Fortified"];
-    if (!validTypes.includes(type)) {
-      Alert.alert(
-        "Error",
-        "Invalid wine type. Please type Red, White, Rose, Sparkling or Fortified."
-      );
-      return;
-    }
-
     try {
-      // Insert the new wine into the database
       await db.runAsync(
         "INSERT INTO Wine (wineMaker, wineName, grape, type, year, rating, region) VALUES (?, ?, ?, ?, ?, ?, ?)",
         [wineMaker, wineName, grape, type, year, rating, region]
       );
 
-      // Show success message and reset form fields
       Alert.alert("Success", "Wine added to your cellar!");
       setWineMaker("");
       setWineName("");
@@ -68,7 +61,6 @@ export default function Home() {
       setRegion("");
       setNotes("");
     } catch (error) {
-      // Show error message if adding a wine fails
       console.error("Error adding wine:", error);
       Alert.alert("Error", "Could not add wine. Please try again.");
     }
@@ -102,12 +94,17 @@ export default function Home() {
           value={grape}
           onChangeText={setGrape}
         />
+
         <TextInput
           style={styles.input}
-          placeholder="Type (Red, White, etc.)"
+          placeholder="Wine Type (Tap to select)"
           value={type}
-          onChangeText={setType}
+          // We don't want the keyboard to show, so disable editing:
+          editable={false}
+          // When the user taps, show the picker modal:
+          onPressIn={() => setShowTypePicker(true)}
         />
+
         <TextInput
           style={styles.input}
           placeholder="Year"
@@ -136,12 +133,47 @@ export default function Home() {
         />
 
         <Button title="Add Wine" onPress={handleAddWine} />
+
+        {/* Modal that appears when selecting the wine 'Type' */}
+        <Modal
+          visible={showTypePicker}
+          transparent={true}
+          animationType="slide"
+        >
+          {/* TouchableOpacity to close the modal when tapping outside */}
+          <TouchableOpacity
+            style={styles.modalOverlay}
+            activeOpacity={1}
+            onPressOut={() => setShowTypePicker(false)}
+          >
+            {/* Stop propagation so tapping inside doesn't close immediately */}
+            <View
+              style={styles.modalContent}
+              onStartShouldSetResponder={() => true}
+            >
+              <Text style={styles.modalTitle}>Select Wine Type</Text>
+
+              <Picker
+                selectedValue={type}
+                onValueChange={(itemValue) => setType(itemValue)}
+              >
+                <Picker.Item label="Select a type" value="" />
+                <Picker.Item label="Red" value="Red" />
+                <Picker.Item label="White" value="White" />
+                <Picker.Item label="Rose" value="Rose" />
+                <Picker.Item label="Sparkling" value="Sparkling" />
+                <Picker.Item label="Fortified" value="Fortified" />
+              </Picker>
+
+              <Button title="Done" onPress={() => setShowTypePicker(false)} />
+            </View>
+          </TouchableOpacity>
+        </Modal>
       </View>
     </SafeAreaView>
   );
 }
 
-// Styles for the component
 const styles = StyleSheet.create({
   safeArea: {
     flex: 1,
@@ -172,5 +204,21 @@ const styles = StyleSheet.create({
     paddingHorizontal: 10,
     marginBottom: 12,
     backgroundColor: "#f9f9f9",
+  },
+  modalOverlay: {
+    flex: 1,
+    backgroundColor: "rgba(0,0,0,0.3)", // semi-transparent backdrop
+    justifyContent: "center",
+  },
+  modalContent: {
+    margin: 20,
+    backgroundColor: "#fff",
+    borderRadius: 8,
+    padding: 16,
+  },
+  modalTitle: {
+    fontSize: 18,
+    fontWeight: "bold",
+    marginBottom: 8,
   },
 });

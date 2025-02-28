@@ -171,11 +171,9 @@ const styles = StyleSheet.create({
     alignItems: "center",
     width: 80,
     backgroundColor: "maroon",
-    // These radii ensure the delete button's right corners match the parent wrapper
     borderTopRightRadius: 16,
     borderBottomRightRadius: 16,
   },
 });
 
 export default MyCellar;
-
