@@ -1818,6 +1818,11 @@
   resolved "https://artifactory-prd.prd.betfair/artifactory/api/npm/npm/@react-native-community/hooks/-/hooks-3.0.0.tgz"
   integrity sha512-g2OyxXHfwIytXUJitBR6Z/ISoOfp0WKx5FOv+NqJ/CrWjRDcTw6zXE5I1C9axfuh30kJqzWchVfCDrkzZYTxqg==
 
+"@react-native-picker/picker@^2.11.0":
+  version "2.11.0"
+  resolved "https://artifactory-prd.prd.betfair/artifactory/api/npm/npm/@react-native-picker/picker/-/picker-2.11.0.tgz"
+  integrity sha512-QuZU6gbxmOID5zZgd/H90NgBnbJ3VV6qVzp6c7/dDrmWdX8S0X5YFYgDcQFjE3dRen9wB9FWnj2VVdPU64adSg==
+
 "@react-native-segmented-control/segmented-control@^2.5.7":
   version "2.5.7"
   resolved "https://artifactory-prd.prd.betfair/artifactory/api/npm/npm/@react-native-segmented-control/segmented-control/-/segmented-control-2.5.7.tgz"
