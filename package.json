@@ -27,6 +27,7 @@
     "expo-status-bar": "~2.0.1",
     "react": "18.3.1",
     "react-dom": "18.3.1",
+    "react-icons": "^5.5.0",
     "react-native": "0.76.6",
     "react-native-auto-size-text": "^1.1.1",
     "react-native-elements": "^3.4.3",
