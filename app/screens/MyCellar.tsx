@@ -1,44 +1,58 @@
-import React, { useEffect, useState, useCallback } from "react";
+// MyCellar.tsx
+import React, { useEffect, useState, useCallback, useContext } from "react";
 import { View, Text, FlatList, StyleSheet, Button, Alert } from "react-native";
 import { useSQLiteContext } from "expo-sqlite";
 import { Wine } from "../../types";
 import { Swipeable } from "react-native-gesture-handler";
+import { AuthContext } from "../../App"; // adjust the path if needed
 
-// MyCellar component
 function MyCellar() {
-  const [wines, setWines] = useState<Wine[]>([]); // State to store the list of wines
-  const [filterType, setFilterType] = useState<string | null>(null); // State to store the selected filter type
-  const db = useSQLiteContext(); // Get the SQLite database context
+  const [wines, setWines] = useState<Wine[]>([]);
+  const [filterType, setFilterType] = useState<string | null>(null);
+  const db = useSQLiteContext();
+  const { currentUser } = useContext(AuthContext);
 
-  // Function to fetch data from the database
+  // Function to fetch data from the database, filtering by the logged in user's id.
   const fetchData = useCallback(async () => {
-    try {
-      // Query to fetch wines based on the selected filter type
-      const query = filterType
-        ? `SELECT * FROM Wine WHERE type = ?`
-        : `SELECT * FROM Wine`;
-      const params = filterType ? [filterType] : [];
+    // Ensure we have a logged in user
+    if (!currentUser || currentUser.id === undefined) {
+      setWines([]);
+      return;
+    }
 
-      // Get the result
+    try {
+      let query: string;
+      let params: (string | number)[];
+
+      if (filterType) {
+        query = "SELECT * FROM Wine WHERE type = ? AND userId = ?";
+        params = [filterType, currentUser.id];
+      } else {
+        query = "SELECT * FROM Wine WHERE userId = ?";
+        params = [currentUser.id];
+      }
+
       const result = await db.getAllAsync<Wine[]>(query, params);
 
       console.log("Fetched result:", result);
 
-      // Update the wines state with the fetched data (had to use flat() because of the way the data is returned)
       setWines(Array.isArray(result) ? result.flat() : []);
     } catch (error) {
       console.error("Error fetching data:", error);
-      setWines([]); // Set wines to an empty array if there's an error
+      setWines([]);
     }
-  }, [db, filterType]);
+  }, [db, filterType, currentUser]);
 
-  // added a useEffect to fetch data when the component mounts or when filterType changes
   useEffect(() => {
     fetchData();
-  }, [filterType]);
+  }, [fetchData, filterType]);
 
   // Function to delete a wine from the database
   const deleteWine = async (id: number) => {
+    if (!currentUser || currentUser.id === undefined) {
+      Alert.alert("Error", "No user is logged in.");
+      return;
+    }
     Alert.alert("Delete Wine", "Are you sure you want to delete this wine?", [
       { text: "Cancel", style: "cancel" },
       {
@@ -46,9 +60,12 @@ function MyCellar() {
         style: "destructive",
         onPress: async () => {
           try {
-            // Execute the delete query
-            await db.runAsync("DELETE FROM Wine WHERE id = ?", [id]);
-            // Update the wines state to remove the deleted wine
+            // Only delete the wine if it belongs to the current user
+            await db.runAsync("DELETE FROM Wine WHERE id = ? AND userId = ?", [
+              id,
+              currentUser.id,
+            ]);
+            // Update state to remove the deleted wine
             setWines((prevWines) => prevWines.filter((wine) => wine.id !== id));
             Alert.alert("Success", "Wine deleted successfully.");
           } catch (error) {
@@ -90,12 +107,10 @@ function MyCellar() {
       {wines.length === 0 ? (
         <Text style={styles.emptyMessage}>No wines found.</Text>
       ) : (
-        // Display the list of wines
         <FlatList
           data={wines}
           keyExtractor={(item) => item.id.toString()}
           renderItem={({ item }) => (
-            // Wrap each swipeable item in a container that clips its children
             <View style={styles.swipeableItemWrapper}>
               <Swipeable renderRightActions={() => renderRightActions(item.id)}>
                 <View style={styles.wineItem}>
@@ -119,7 +134,6 @@ function MyCellar() {
   );
 }
 
-// Styles for the component
 const styles = StyleSheet.create({
   container: {
     flex: 1,
@@ -137,7 +151,6 @@ const styles = StyleSheet.create({
     justifyContent: "space-around",
     marginBottom: 16,
   },
-  // New wrapper style to enforce rounded corners on the entire swipable item
   swipeableItemWrapper: {
     borderRadius: 16,
     overflow: "hidden",
