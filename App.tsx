@@ -11,10 +11,7 @@ import Login from "./app/screens/SignIn";
 import WelcomeScreen from "./app/screens/WelcomeScreen";
 import { GestureHandlerRootView } from "react-native-gesture-handler";
 import Icon from "react-native-vector-icons/MaterialCommunityIcons";
-import * as FileSystem from "expo-file-system";
-import { Asset } from "expo-asset";
 import * as Font from "expo-font";
-import { StatusBar } from "expo-status-bar";
 
 // Load Montserrat font
 const fetchFonts = () => {
@@ -53,12 +50,73 @@ function DBInitializer() {
   useEffect(() => {
     const initializeDBSchema = async () => {
       try {
-        const schema = await db.getAllAsync("PRAGMA table_info(Wine)", []);
-        console.log("Updated Wine table schema:", schema);
+        // Retrieve the current Wine table schema
+        const wineSchema = await db.getAllAsync("PRAGMA table_info(Wine)", []);
+        console.log("Wine table schema:", wineSchema);
+
+        if (wineSchema.length === 0) {
+          console.log("Wine table does not exist. Creating table...");
+          await db.runAsync(
+            `CREATE TABLE IF NOT EXISTS Wine (
+              id INTEGER PRIMARY KEY AUTOINCREMENT,
+              wineMaker TEXT NOT NULL,
+              wineName TEXT NOT NULL,
+              grape TEXT NOT NULL,
+              type TEXT NOT NULL CHECK (type IN ('Red', 'White', 'Rose', 'Sparkling', 'Dessert', 'Fortified')),
+              year INTEGER,
+              rating REAL,
+              region TEXT,
+              notes TEXT,
+              labelImage BLOB,
+              userId INTEGER
+            )`
+          );
+          console.log("Wine table created successfully.");
+        } else {
+          console.log("Wine table exists. Checking for missing columns...");
+
+          // Define the required columns and their definitions
+          const requiredColumns = [
+            { name: "wineMaker", def: "TEXT NOT NULL" },
+            { name: "wineName", def: "TEXT NOT NULL" },
+            { name: "grape", def: "TEXT NOT NULL" },
+            {
+              name: "type",
+              def: "TEXT NOT NULL CHECK (type IN ('Red', 'White', 'Rose', 'Sparkling', 'Dessert', 'Fortified'))",
+            },
+            { name: "year", def: "INTEGER" },
+            { name: "rating", def: "REAL" },
+            { name: "region", def: "TEXT" },
+            { name: "notes", def: "TEXT" },
+            { name: "labelImage", def: "BLOB" },
+            { name: "userId", def: "INTEGER" },
+          ];
+
+          // Loop through each required column
+          for (const col of requiredColumns) {
+            const exists = wineSchema.some((column) => col.name === col.name);
+            if (!exists) {
+              console.log(
+                `Column ${col.name} does not exist. Altering table to add it...`
+              );
+              await db.runAsync(
+                `ALTER TABLE Wine ADD COLUMN ${col.name} ${col.def}`
+              );
+              console.log(`Added column ${col.name} to Wine table.`);
+            }
+          }
+        }
+
+        // Create the User table if it doesn't exist
+        await db.runAsync(
+          "CREATE TABLE IF NOT EXISTS User (id INTEGER PRIMARY KEY AUTOINCREMENT, username TEXT, email TEXT, password TEXT)"
+        );
+        console.log("User table created or already exists.");
       } catch (error) {
-        console.log("Error updating Wine schema:", error);
+        console.error("Error initializing DB schema:", error);
       }
     };
+
     initializeDBSchema();
   }, [db]);
 
@@ -105,11 +163,20 @@ function LogoutScreen() {
 
 function MainApp() {
   return (
-    <Tab.Navigator>
+    <Tab.Navigator
+      screenOptions={{
+        headerShown: false,
+        tabBarStyle: {
+          backgroundColor: "#FEF6F3",
+          borderTopWidth: 0,
+        },
+      }}
+    >
       <Tab.Screen
         name="Home"
         component={Home}
         options={{
+          headerShown: false,
           tabBarIcon: ({ color, size }) => (
             <Icon name="home" size={size} color={color} />
           ),
@@ -144,9 +211,9 @@ function AuthNavigator() {
       screenOptions={{ headerShown: false }} // hides header on all screens in this navigator
     >
       <AuthStack.Screen name="Welcome" component={WelcomeScreen} />
+      <AuthStack.Screen name="Home" component={Home} />
       <AuthStack.Screen name="Login" component={Login} />
       <AuthStack.Screen name="SignUp" component={SignUp} />
-      <AuthStack.Screen name="Home" component={Home} />
       <AuthStack.Screen name="MyCellar" component={MyCellar} />
     </AuthStack.Navigator>
   );
@@ -185,7 +252,6 @@ export default function App() {
 
   return (
     <GestureHandlerRootView style={{ flex: 1 }}>
-      {/* <StatusBar hidden={true} /> */}
       <NavigationContainer>
         <SQLiteProvider databaseName="vine_DB.db" useSuspense>
           <DBInitializer />

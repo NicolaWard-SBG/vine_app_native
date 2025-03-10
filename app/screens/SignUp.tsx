@@ -62,7 +62,8 @@ export default function SignUp() {
           <Ionicons name="arrow-back" size={24} color="black" />
         </Text>
       </TouchableOpacity>
-      <Text style={styles.title}></Text>
+      <Text style={styles.titleOne}>CREATE</Text>
+      <Text style={styles.titleTwo}>YOUR ACCOUNT.</Text>
       <TextInput
         placeholder="Username"
         value={username}
@@ -110,11 +111,16 @@ const styles = StyleSheet.create({
     fontSize: 16,
     color: "blue",
   },
-  title: {
+  titleOne: {
+    fontSize: 24,
+    fontWeight: "bold",
+    fontFamily: "Montserrat",
+  },
+  titleTwo: {
     fontSize: 24,
     fontWeight: "bold",
     marginBottom: 16,
-    textAlign: "center",
+    fontFamily: "Montserrat",
   },
   input: {
     height: 40,

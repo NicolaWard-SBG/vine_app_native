@@ -1,10 +1,61 @@
-// MyCellar.tsx
 import React, { useEffect, useState, useCallback, useContext } from "react";
-import { View, Text, FlatList, StyleSheet, Button, Alert } from "react-native";
+import {
+  View,
+  Text,
+  FlatList,
+  StyleSheet,
+  Button,
+  Alert,
+  SafeAreaView,
+  Image,
+} from "react-native";
 import { useSQLiteContext } from "expo-sqlite";
 import { Wine } from "../../types";
 import { Swipeable } from "react-native-gesture-handler";
-import { AuthContext } from "../../App"; // adjust the path if needed
+import { AuthContext } from "../../App";
+import colors from "../assets/colors/colors";
+
+const FILTER_TYPES = ["All", "Red", "White", "Rose", "Sparkling", "Fortified"];
+
+interface WineItemProps {
+  wine: Wine;
+  onDelete: (id: number) => void;
+}
+
+const WineItem = ({ wine, onDelete }: WineItemProps) => {
+  const renderRightActions = () => (
+    <View
+      style={[styles.deleteButtonContainer, { height: styles.wineItem.height }]}
+    >
+      <Button title="Delete" color="white" onPress={() => onDelete(wine.id)} />
+    </View>
+  );
+
+  return (
+    <View style={styles.swipeableItemWrapper}>
+      <Swipeable renderRightActions={renderRightActions}>
+        <View style={styles.wineItem}>
+          {wine.labelImage && (
+            <Image
+              source={{ uri: wine.labelImage }}
+              style={styles.wineLabelImage}
+            />
+          )}
+          <View style={styles.wineInfo}>
+            <Text>{wine.wineMaker}</Text>
+            <Text style={styles.wineName}>{wine.wineName}</Text>
+            <Text>{wine.grape}</Text>
+            <Text>{wine.type}</Text>
+            <Text>{wine.year}</Text>
+            <Text>{wine.rating}</Text>
+            <Text>{wine.region}</Text>
+            <Text>{wine.notes}</Text>
+          </View>
+        </View>
+      </Swipeable>
+    </View>
+  );
+};
 
 function MyCellar() {
   const [wines, setWines] = useState<Wine[]>([]);
@@ -12,30 +63,22 @@ function MyCellar() {
   const db = useSQLiteContext();
   const { currentUser } = useContext(AuthContext);
 
-  // Function to fetch data from the database, filtering by the logged in user's id.
   const fetchData = useCallback(async () => {
-    // Ensure we have a logged in user
-    if (!currentUser || currentUser.id === undefined) {
+    if (!currentUser?.id) {
       setWines([]);
       return;
     }
 
     try {
-      let query: string;
-      let params: (string | number)[];
-
-      if (filterType) {
-        query = "SELECT * FROM Wine WHERE type = ? AND userId = ?";
-        params = [filterType, currentUser.id];
-      } else {
-        query = "SELECT * FROM Wine WHERE userId = ?";
-        params = [currentUser.id];
-      }
+      const query = filterType
+        ? "SELECT * FROM Wine WHERE type = ? AND userId = ?"
+        : "SELECT * FROM Wine WHERE userId = ?";
+      const params = filterType
+        ? [filterType, currentUser.id]
+        : [currentUser.id];
 
       const result = await db.getAllAsync<Wine[]>(query, params);
-
       console.log("Fetched result:", result);
-
       setWines(Array.isArray(result) ? result.flat() : []);
     } catch (error) {
       console.error("Error fetching data:", error);
@@ -45,11 +88,10 @@ function MyCellar() {
 
   useEffect(() => {
     fetchData();
-  }, [fetchData, filterType]);
+  }, [fetchData]);
 
-  // Function to delete a wine from the database
   const deleteWine = async (id: number) => {
-    if (!currentUser || currentUser.id === undefined) {
+    if (!currentUser?.id) {
       Alert.alert("Error", "No user is logged in.");
       return;
     }
@@ -60,12 +102,10 @@ function MyCellar() {
         style: "destructive",
         onPress: async () => {
           try {
-            // Only delete the wine if it belongs to the current user
             await db.runAsync("DELETE FROM Wine WHERE id = ? AND userId = ?", [
               id,
               currentUser.id,
             ]);
-            // Update state to remove the deleted wine
             setWines((prevWines) => prevWines.filter((wine) => wine.id !== id));
             Alert.alert("Success", "Wine deleted successfully.");
           } catch (error) {
@@ -77,60 +117,35 @@ function MyCellar() {
     ]);
   };
 
-  // Render the right action for the swipeable component
-  const renderRightActions = (id: number) => (
-    <View
-      style={[styles.deleteButtonContainer, { height: styles.wineItem.height }]}
-    >
-      <Button title="Delete" color="white" onPress={() => deleteWine(id)} />
-    </View>
+  const renderWineItem = ({ item }: { item: Wine }) => (
+    <WineItem wine={item} onDelete={deleteWine} />
   );
 
   return (
-    <View style={styles.container}>
-      <Text style={styles.title}>My Cellar</Text>
-
-      {/* Filter buttons */}
-      <View style={styles.filterContainer}>
-        {["All", "Red", "White", "Rose", "Sparkling", "Fortified"].map(
-          (type) => (
+    <SafeAreaView style={styles.safeArea}>
+      <View style={styles.container}>
+        {/* Render filter buttons */}
+        <View style={styles.filterContainer}>
+          {FILTER_TYPES.map((type) => (
             <Button
               key={type}
               title={type}
               onPress={() => setFilterType(type === "All" ? null : type)}
             />
-          )
+          ))}
+        </View>
+
+        {wines.length === 0 ? (
+          <Text style={styles.emptyMessage}>No wines found.</Text>
+        ) : (
+          <FlatList
+            data={wines}
+            keyExtractor={(item) => item.id.toString()}
+            renderItem={renderWineItem}
+          />
         )}
       </View>
-
-      {/* Display message if no wines are found */}
-      {wines.length === 0 ? (
-        <Text style={styles.emptyMessage}>No wines found.</Text>
-      ) : (
-        <FlatList
-          data={wines}
-          keyExtractor={(item) => item.id.toString()}
-          renderItem={({ item }) => (
-            <View style={styles.swipeableItemWrapper}>
-              <Swipeable renderRightActions={() => renderRightActions(item.id)}>
-                <View style={styles.wineItem}>
-                  <View style={styles.wineInfo}>
-                    <Text>{item.wineMaker}</Text>
-                    <Text style={styles.wineName}>{item.wineName}</Text>
-                    <Text>{item.grape}</Text>
-                    <Text>{item.type}</Text>
-                    <Text>{item.year}</Text>
-                    <Text>{item.rating}</Text>
-                    <Text>{item.region}</Text>
-                    <Text>{item.notes}</Text>
-                  </View>
-                </View>
-              </Swipeable>
-            </View>
-          )}
-        />
-      )}
-    </View>
+    </SafeAreaView>
   );
 }
 
@@ -138,13 +153,11 @@ const styles = StyleSheet.create({
   container: {
     flex: 1,
     padding: 16,
-    backgroundColor: "#fff",
+    backgroundColor: colors.seashell,
   },
-  title: {
-    fontSize: 24,
-    fontWeight: "bold",
-    marginBottom: 16,
-    textAlign: "center",
+  safeArea: {
+    flex: 1,
+    backgroundColor: colors.seashell,
   },
   filterContainer: {
     flexDirection: "row",
@@ -160,7 +173,7 @@ const styles = StyleSheet.create({
   },
   wineItem: {
     flexDirection: "row",
-    justifyContent: "space-between",
+    justifyContent: "flex-start",
     alignItems: "center",
     padding: 10,
     backgroundColor: "#f9f9f9",
@@ -173,6 +186,12 @@ const styles = StyleSheet.create({
     fontSize: 18,
     fontWeight: "bold",
   },
+  wineLabelImage: {
+    width: 80,
+    height: 80,
+    marginRight: 10,
+    borderRadius: 8,
+  },
   emptyMessage: {
     textAlign: "center",
     fontSize: 16,
@@ -183,7 +202,7 @@ const styles = StyleSheet.create({
     justifyContent: "center",
     alignItems: "center",
     width: 80,
-    backgroundColor: "maroon",
+    backgroundColor: colors.faluRed,
     borderTopRightRadius: 16,
     borderBottomRightRadius: 16,
   },

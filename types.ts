@@ -10,6 +10,7 @@ export interface Wine {
   rating?: number;
   region?: string;
   notes?: string;
+  labelImage?: string;
 }
 
 export interface User {
