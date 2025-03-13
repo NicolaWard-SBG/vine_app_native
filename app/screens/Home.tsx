@@ -1,4 +1,4 @@
-import React, { useState, useContext } from "react";
+import React, { useState, useContext, useEffect } from "react";
 import { SafeAreaView } from "react-native-safe-area-context";
 import {
   View,
@@ -10,6 +10,9 @@ import {
   Image,
   Modal,
   TouchableOpacity,
+  ScrollView,
+  KeyboardAvoidingView,
+  Platform,
 } from "react-native";
 import { Picker } from "@react-native-picker/picker";
 import { useSQLiteContext } from "expo-sqlite";
@@ -98,9 +101,50 @@ function Home() {
   const [labelImage, setLabelImage] = useState<string | null>(null);
   const [showTypePicker, setShowTypePicker] = useState(false);
 
+  // Request camera and media library permissions when component mounts
+  useEffect(() => {
+    (async () => {
+      const cameraPermission =
+        await ImagePicker.requestCameraPermissionsAsync();
+      const mediaLibraryPermission =
+        await ImagePicker.requestMediaLibraryPermissionsAsync();
+
+      if (!cameraPermission.granted) {
+        Alert.alert(
+          "Permission Required",
+          "Camera access is required to take pictures of wine labels.",
+          [{ text: "OK" }]
+        );
+      }
+
+      if (!mediaLibraryPermission.granted) {
+        Alert.alert(
+          "Permission Required",
+          "Media library access is required to save wine label images.",
+          [{ text: "OK" }]
+        );
+      }
+    })();
+  }, []);
+
   // Launch the camera to take a picture
   const handleTakePicture = async () => {
     try {
+      // Check permissions again before launching camera
+      const { status: cameraStatus } =
+        await ImagePicker.getCameraPermissionsAsync();
+
+      if (cameraStatus !== "granted") {
+        const { status } = await ImagePicker.requestCameraPermissionsAsync();
+        if (status !== "granted") {
+          Alert.alert(
+            "Permission Denied",
+            "We need camera permissions to take pictures."
+          );
+          return;
+        }
+      }
+
       const result = await ImagePicker.launchCameraAsync({
         allowsEditing: true,
         aspect: [4, 3],
@@ -114,6 +158,10 @@ function Home() {
       }
     } catch (error) {
       console.error("Error launching camera:", error);
+      Alert.alert(
+        "Camera Error",
+        "There was a problem accessing the camera. Please check your permissions."
+      );
     }
   };
 
@@ -156,8 +204,8 @@ function Home() {
           wineName,
           grape,
           type,
-          year,
-          rating,
+          parseInt(year),
+          parseFloat(rating),
           region,
           notes,
           currentUser.id,
@@ -174,65 +222,83 @@ function Home() {
 
   return (
     <SafeAreaView style={styles.safeArea}>
-      <View style={styles.container}>
-        <Text style={styles.title}>SIP & STORE</Text>
-        <Text style={styles.subtitle}>
-          Capture your wine's story — snap a label, log the details, and rate
-          every sip.
-        </Text>
-        <FormInput
-          placeholder="Wine Maker"
-          value={wineMaker}
-          onChangeText={setWineMaker}
-        />
-        <FormInput
-          placeholder="Wine Name"
-          value={wineName}
-          onChangeText={setWineName}
-        />
-        <FormInput
-          placeholder="Grape Variety"
-          value={grape}
-          onChangeText={setGrape}
-        />
-        <FormInput
-          placeholder="Wine Type (Tap to select)"
-          value={type}
-          editable={false}
-          onPressIn={() => setShowTypePicker(true)}
-          onChangeText={setType}
-        />
-        <FormInput
-          placeholder="Year"
-          value={year}
-          keyboardType="numeric"
-          onChangeText={setYear}
-        />
-        <FormInput
-          placeholder="Rating (1-5)"
-          value={rating}
-          keyboardType="numeric"
-          onChangeText={setRating}
-        />
-        <FormInput
-          placeholder="Region"
-          value={region}
-          onChangeText={setRegion}
-        />
-        <FormInput placeholder="Notes" value={notes} onChangeText={setNotes} />
+      <KeyboardAvoidingView
+        behavior={Platform.OS === "ios" ? "padding" : "height"}
+        style={styles.container}
+      >
+        <ScrollView
+          contentContainerStyle={styles.scrollContent}
+          showsVerticalScrollIndicator={true}
+        >
+          <Text style={styles.title}>SIP & STORE</Text>
+          <Text style={styles.subtitle}>
+            Capture your wine's story — snap a label, log the details, and rate
+            every sip.
+          </Text>
+          <FormInput
+            placeholder="Wine Maker"
+            value={wineMaker}
+            onChangeText={setWineMaker}
+          />
+          <FormInput
+            placeholder="Wine Name"
+            value={wineName}
+            onChangeText={setWineName}
+          />
+          <FormInput
+            placeholder="Grape Variety"
+            value={grape}
+            onChangeText={setGrape}
+          />
+          <FormInput
+            placeholder="Wine Type (Tap to select)"
+            value={type}
+            editable={false}
+            onPressIn={() => setShowTypePicker(true)}
+            onChangeText={setType}
+          />
+          <FormInput
+            placeholder="Year"
+            value={year}
+            keyboardType="numeric"
+            onChangeText={setYear}
+          />
+          <FormInput
+            placeholder="Rating (1-5)"
+            value={rating}
+            keyboardType="numeric"
+            onChangeText={setRating}
+          />
+          <FormInput
+            placeholder="Region"
+            value={region}
+            onChangeText={setRegion}
+          />
+          <FormInput
+            placeholder="Notes"
+            value={notes}
+            onChangeText={setNotes}
+          />
 
-        {/* Display image preview if available */}
-        {labelImage && (
-          <Image source={{ uri: labelImage }} style={styles.labelPreview} />
-        )}
+          {/* Display image preview if available */}
+          {labelImage && (
+            <Image source={{ uri: labelImage }} style={styles.labelPreview} />
+          )}
 
-        <TouchableOpacity style={styles.button} onPress={handleTakePicture}>
-          <Text style={styles.buttonText}>Take Label Picture</Text>
-        </TouchableOpacity>
+          <TouchableOpacity
+            style={styles.cameraButton}
+            onPress={handleTakePicture}
+          >
+            <Text style={styles.buttonText}>ADD LABEL PHOTOGRAPH</Text>
+          </TouchableOpacity>
 
-        <TouchableOpacity style={styles.button} onPress={handleAddWine}>
-          <Text style={styles.buttonText}>ADD WINE</Text>
-        </TouchableOpacity>
+          <TouchableOpacity style={styles.button} onPress={handleAddWine}>
+            <Text style={styles.buttonText}>ADD WINE</Text>
+          </TouchableOpacity>
+
+          {/* Add extra space at the bottom for scrolling */}
+          <View style={styles.bottomPadding} />
+        </ScrollView>
 
         <WineTypeModal
           visible={showTypePicker}
@@ -240,7 +306,7 @@ function Home() {
           onSelect={setType}
           onClose={() => setShowTypePicker(false)}
         />
-      </View>
+      </KeyboardAvoidingView>
     </SafeAreaView>
   );
 }
@@ -252,9 +318,11 @@ const styles = StyleSheet.create({
   },
   container: {
     flex: 1,
-    padding: 16,
-    paddingTop: 0,
     backgroundColor: colors.seashell,
+  },
+  scrollContent: {
+    padding: 16,
+    paddingBottom: 40, // Extra padding at the bottom
   },
   title: {
     marginTop: 40,
@@ -299,6 +367,14 @@ const styles = StyleSheet.create({
     fontWeight: "bold",
     marginBottom: 8,
   },
+  cameraButton: {
+    backgroundColor: colors.melon,
+    paddingVertical: 12,
+    paddingHorizontal: 20,
+    alignItems: "center",
+    justifyContent: "center",
+    marginBottom: 12,
+  },
   button: {
     backgroundColor: colors.faluRed,
     paddingVertical: 12,
@@ -312,6 +388,9 @@ const styles = StyleSheet.create({
     fontSize: 16,
     fontWeight: "600",
     fontFamily: "Montserrat",
+  },
+  bottomPadding: {
+    height: 20,
   },
 });
 

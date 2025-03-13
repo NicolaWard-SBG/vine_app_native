@@ -1,6 +1,6 @@
 {
   "expo": {
-    "name": "wine-app-native",
+    "name": "Vine App",
     "slug": "vine-app",
     "scheme": "vine-app",
     "version": "1.0.0",
@@ -15,7 +15,11 @@
     },
     "ios": {
       "supportsTablet": true,
-      "bundleIdentifier": "vine"
+      "bundleIdentifier": "com.nicolaward.vine",
+      "buildNumber": "1.0.0",
+      "infoPlist": {
+        "ITSAppUsesNonExemptEncryption": false
+      }
     },
     "android": {
       "adaptiveIcon": {
@@ -31,7 +35,10 @@
     "expo": {
       "entryPoint": "./node_modules/expo-router/entry"
     },
-    "plugins": ["expo-sqlite", "expo-asset"],
+    "plugins": [
+      "expo-sqlite",
+      "expo-asset"
+    ],
     "extra": {
       "eas": {
         "projectId": "fe0a3f67-737b-41e1-9f01-e0c418c3be00"

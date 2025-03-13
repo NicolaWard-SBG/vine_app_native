@@ -38,9 +38,10 @@ export const AuthContext = createContext<{
   setCurrentUser: () => {},
 });
 
+// Modified to use the asset functionality of SQLiteProvider
 const loadDatabase = async () => {
-  const dbName = "vine_DB.db";
-  const dbAsset = require("./app/assets/vine_DB.db");
+  // This function is now essentially a placeholder since the SQLiteProvider handles loading the asset
+  return Promise.resolve();
 };
 
 // Component to initialize or update the DB schema
@@ -50,11 +51,15 @@ function DBInitializer() {
   useEffect(() => {
     const initializeDBSchema = async () => {
       try {
-        // Retrieve the current Wine table schema
-        const wineSchema = await db.getAllAsync("PRAGMA table_info(Wine)", []);
-        console.log("Wine table schema:", wineSchema);
+        console.log("Starting DB schema initialization...");
 
-        if (wineSchema.length === 0) {
+        // First, check if the Wine table exists and has the correct structure
+        const wineTableExists = await db.getAllAsync(
+          "SELECT name FROM sqlite_master WHERE type='table' AND name='Wine'",
+          []
+        );
+
+        if (wineTableExists.length === 0) {
           console.log("Wine table does not exist. Creating table...");
           await db.runAsync(
             `CREATE TABLE IF NOT EXISTS Wine (
@@ -73,37 +78,116 @@ function DBInitializer() {
           );
           console.log("Wine table created successfully.");
         } else {
-          console.log("Wine table exists. Checking for missing columns...");
+          // Check that the Wine table has the correct columns
+          const wineSchema = await db.getAllAsync(
+            "PRAGMA table_info(Wine)",
+            []
+          );
+          console.log("Current Wine table schema:", wineSchema);
 
-          // Define the required columns and their definitions
+          // Get the column names from the schema
+          const columnNames = wineSchema.map((col: any) => col.name);
+
+          // Check if the required columns exist
           const requiredColumns = [
-            { name: "wineMaker", def: "TEXT NOT NULL" },
-            { name: "wineName", def: "TEXT NOT NULL" },
-            { name: "grape", def: "TEXT NOT NULL" },
-            {
-              name: "type",
-              def: "TEXT NOT NULL CHECK (type IN ('Red', 'White', 'Rose', 'Sparkling', 'Dessert', 'Fortified'))",
-            },
-            { name: "year", def: "INTEGER" },
-            { name: "rating", def: "REAL" },
-            { name: "region", def: "TEXT" },
-            { name: "notes", def: "TEXT" },
-            { name: "labelImage", def: "BLOB" },
-            { name: "userId", def: "INTEGER" },
+            "wineMaker",
+            "wineName",
+            "grape",
+            "type",
+            "year",
+            "rating",
+            "region",
+            "notes",
+            "labelImage",
+            "userId",
           ];
 
-          // Loop through each required column
-          for (const col of requiredColumns) {
-            const exists = wineSchema.some((column) => col.name === col.name);
-            if (!exists) {
+          const missingColumns = requiredColumns.filter(
+            (colName) => !columnNames.includes(colName)
+          );
+
+          if (missingColumns.length > 0) {
+            console.log("Missing columns detected:", missingColumns);
+
+            // If columns are missing, it might be better to recreate the table
+            // But first check if there's data we should preserve
+            const rowCount = await db.getFirstAsync(
+              "SELECT COUNT(*) as count FROM Wine",
+              []
+            );
+
+            if (rowCount && (rowCount as { count: number }).count > 0) {
               console.log(
-                `Column ${col.name} does not exist. Altering table to add it...`
+                `Found ${
+                  (rowCount as { count: number }).count
+                } existing wines. Adding missing columns...`
               );
+
+              // Add missing columns one by one
+              for (const colName of missingColumns) {
+                let colDef;
+                switch (colName) {
+                  case "wineMaker":
+                  case "wineName":
+                  case "grape":
+                    colDef = "TEXT NOT NULL DEFAULT ''";
+                    break;
+                  case "type":
+                    colDef = "TEXT NOT NULL DEFAULT 'Red'";
+                    break;
+                  case "year":
+                  case "userId":
+                    colDef = "INTEGER";
+                    break;
+                  case "rating":
+                    colDef = "REAL";
+                    break;
+                  case "region":
+                  case "notes":
+                    colDef = "TEXT";
+                    break;
+                  case "labelImage":
+                    colDef = "BLOB";
+                    break;
+                  default:
+                    colDef = "TEXT";
+                }
+
+                try {
+                  await db.runAsync(
+                    `ALTER TABLE Wine ADD COLUMN ${colName} ${colDef}`
+                  );
+                  console.log(`Added column ${colName} to Wine table.`);
+                } catch (error) {
+                  console.error(`Error adding column ${colName}:`, error);
+                }
+              }
+            } else {
+              console.log(
+                "No existing wine data. Recreating the Wine table..."
+              );
+
+              // Drop and recreate the table if there's no data to preserve
+              await db.runAsync("DROP TABLE IF EXISTS Wine");
               await db.runAsync(
-                `ALTER TABLE Wine ADD COLUMN ${col.name} ${col.def}`
+                `CREATE TABLE IF NOT EXISTS Wine (
+                  id INTEGER PRIMARY KEY AUTOINCREMENT,
+                  wineMaker TEXT NOT NULL,
+                  wineName TEXT NOT NULL,
+                  grape TEXT NOT NULL,
+                  type TEXT NOT NULL CHECK (type IN ('Red', 'White', 'Rose', 'Sparkling', 'Dessert', 'Fortified')),
+                  year INTEGER,
+                  rating REAL,
+                  region TEXT,
+                  notes TEXT,
+                  labelImage BLOB,
+                  userId INTEGER
+                )`
               );
-              console.log(`Added column ${col.name} to Wine table.`);
+              console.log("Wine table recreated successfully.");
             }
+          } else {
+            console.log("Wine table schema is correct.");
           }
         }
 
@@ -112,6 +196,8 @@ function DBInitializer() {
           "CREATE TABLE IF NOT EXISTS User (id INTEGER PRIMARY KEY AUTOINCREMENT, username TEXT, email TEXT, password TEXT)"
         );
         console.log("User table created or already exists.");
+
+        console.log("DB schema initialization completed successfully.");
       } catch (error) {
         console.error("Error initializing DB schema:", error);
       }
