@@ -72,7 +72,7 @@ function DBInitializer() {
               rating REAL,
               region TEXT,
               notes TEXT,
-              labelImage BLOB,
+              labelImage TEXT,
               userId INTEGER
             )`
           );
@@ -147,7 +147,7 @@ function DBInitializer() {
                     colDef = "TEXT";
                     break;
                   case "labelImage":
-                    colDef = "BLOB";
+                    colDef = "TEXT";
                     break;
                   default:
                     colDef = "TEXT";
@@ -180,7 +180,7 @@ function DBInitializer() {
                   rating REAL,
                   region TEXT,
                   notes TEXT,
-                  labelImage BLOB,
+                  labelImage TEXT,
                   userId INTEGER
                 )`
               );
