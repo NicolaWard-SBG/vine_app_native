@@ -10,7 +10,7 @@ import {
 import { useNavigation } from "@react-navigation/native";
 import Ionicons from "react-native-vector-icons/Ionicons";
 import colors from "../assets/colors/colors";
-import { AuthContext } from "../contexts/AuthContext"; // or where you export it
+import { AuthContext } from "../contexts/AuthContext";
 import { auth } from "../services/firebaseConfig";
 import { createUserWithEmailAndPassword, updateProfile } from "firebase/auth";
 

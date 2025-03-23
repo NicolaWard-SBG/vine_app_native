@@ -1,4 +1,3 @@
-// app/navigation/AppNavigator.tsx
 import React, { useEffect, useContext } from "react";
 import { View, Alert } from "react-native";
 import { createBottomTabNavigator } from "@react-navigation/bottom-tabs";
@@ -119,13 +118,6 @@ export function AuthNavigator() {
       <AuthStack.Screen name="Welcome" component={WelcomeScreen} />
       <AuthStack.Screen name="SignIn" component={SignInScreen} />
       <AuthStack.Screen name="SignUp" component={SignUpScreen} />
-      {/* 
-        If you only want Home/MyCellar accessible AFTER login, 
-        you can remove them from the Auth stack. 
-        They’re also in the MainApp tab navigator.
-      */}
-      <AuthStack.Screen name="Home" component={HomeScreen} />
-      <AuthStack.Screen name="MyCellar" component={MyCellarScreen} />
     </AuthStack.Navigator>
   );
 }

@@ -1,4 +1,3 @@
-// app/screens/MyCellar.tsx
 import React, { useState, useContext, useCallback } from "react";
 import {
   View,

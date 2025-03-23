@@ -1,4 +1,3 @@
-// app/components/WineItem.tsx
 import React from "react";
 import { View, Text, Image, Button, StyleSheet } from "react-native";
 import { Swipeable } from "react-native-gesture-handler";

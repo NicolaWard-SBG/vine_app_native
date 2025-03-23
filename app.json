@@ -5,7 +5,7 @@
     "scheme": "vine-app",
     "version": "1.0.0",
     "orientation": "portrait",
-    "icon": "./app/assets/icon.png",
+    "icon": "./app/assets/icon/VineAppIcon.gif",
     "userInterfaceStyle": "light",
     "newArchEnabled": true,
     "splash": {
@@ -35,10 +35,7 @@
     "expo": {
       "entryPoint": "./node_modules/expo-router/entry"
     },
-    "plugins": [
-      "expo-sqlite",
-      "expo-asset"
-    ],
+    "plugins": ["expo-sqlite", "expo-asset"],
     "extra": {
       "eas": {
         "projectId": "fe0a3f67-737b-41e1-9f01-e0c418c3be00"

@@ -1,4 +1,3 @@
-// app/components/WineTypeModal.tsx
 import React from "react";
 import {
   Modal,

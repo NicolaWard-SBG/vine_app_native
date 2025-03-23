@@ -1,4 +1,3 @@
-// app/screens/HomeScreen.tsx
 import React, { useState, useContext, useEffect } from "react";
 import {
   SafeAreaView,
