@@ -1,98 +1,32 @@
+// app/screens/HomeScreen.tsx
 import React, { useState, useContext, useEffect } from "react";
-import { SafeAreaView } from "react-native-safe-area-context";
 import {
-  View,
+  SafeAreaView,
+  KeyboardAvoidingView,
+  ScrollView,
+  Platform,
+  TouchableOpacity,
   Text,
-  TextInput,
-  Button,
+  Image,
   StyleSheet,
   Alert,
-  Image,
-  Modal,
-  TouchableOpacity,
-  ScrollView,
-  KeyboardAvoidingView,
-  Platform,
+  View,
 } from "react-native";
-import { Picker } from "@react-native-picker/picker";
-import { AuthContext } from "../../AppContext";
+import { AuthContext } from "../contexts/AuthContext";
 import colors from "../assets/colors/colors";
 import * as ImagePicker from "expo-image-picker";
 import NetInfo from "@react-native-community/netinfo";
 import { addDoc, collection } from "firebase/firestore";
-import { db } from "../../firebaseConfig";
+import { db } from "../services/firebaseConfig";
 import {
   saveWineToStorage,
   getWinesFromStorage,
   updateWinesInStorage,
-} from "../../storage";
+} from "../services/storage";
+import { FormInput } from "../components/FormInput";
+import { WineTypeModal } from "../components/WineTypeModal";
 
-// Reusable form input component
-interface FormInputProps {
-  placeholder: string;
-  value: string;
-  onChangeText: (text: string) => void;
-  keyboardType?: "default" | "numeric";
-  editable?: boolean;
-  onPressIn?: () => void;
-}
-
-const FormInput = ({
-  placeholder,
-  value,
-  onChangeText,
-  keyboardType = "default",
-  editable = true,
-  onPressIn,
-}: FormInputProps) => (
-  <TextInput
-    style={styles.input}
-    placeholder={placeholder}
-    value={value}
-    onChangeText={onChangeText}
-    keyboardType={keyboardType}
-    editable={editable}
-    onPressIn={onPressIn}
-  />
-);
-
-// Wine type selection modal
-interface WineTypeModalProps {
-  visible: boolean;
-  selectedType: string;
-  onSelect: (type: string) => void;
-  onClose: () => void;
-}
-
-const WineTypeModal = ({
-  visible,
-  selectedType,
-  onSelect,
-  onClose,
-}: WineTypeModalProps) => (
-  <Modal visible={visible} transparent animationType="slide">
-    <TouchableOpacity
-      style={styles.modalOverlay}
-      activeOpacity={1}
-      onPressOut={onClose}
-    >
-      <View style={styles.modalContent} onStartShouldSetResponder={() => true}>
-        <Text style={styles.modalTitle}>Select Wine Type</Text>
-        <Picker selectedValue={selectedType} onValueChange={onSelect}>
-          <Picker.Item label="Select a type" value="" />
-          <Picker.Item label="Red" value="Red" />
-          <Picker.Item label="White" value="White" />
-          <Picker.Item label="Rose" value="Rose" />
-          <Picker.Item label="Sparkling" value="Sparkling" />
-          <Picker.Item label="Fortified" value="Fortified" />
-        </Picker>
-        <Button title="Done" onPress={onClose} />
-      </View>
-    </TouchableOpacity>
-  </Modal>
-);
-
-function Home() {
+function HomeScreen() {
   const { currentUser } = useContext(AuthContext);
 
   const [wineMaker, setWineMaker] = useState("");
@@ -121,6 +55,7 @@ function Home() {
 
     await updateWinesInStorage(wines);
   };
+
   useEffect(() => {
     (async () => {
       const cameraPermission =
@@ -250,12 +185,13 @@ function Home() {
             value={grape}
             onChangeText={setGrape}
           />
+          {/* Wine Type Input with onPressIn to trigger the modal */}
           <FormInput
             placeholder="Wine Type (Tap to select)"
             value={type}
             editable={false}
             onPressIn={() => setShowTypePicker(true)}
-            onChangeText={setType}
+            onChangeText={() => {}}
           />
           <FormInput
             placeholder="Year"
@@ -298,6 +234,7 @@ function Home() {
           <View style={styles.bottomPadding} />
         </ScrollView>
 
+        {/* Render the WineTypeModal only once */}
         <WineTypeModal
           visible={showTypePicker}
           selectedType={type}
@@ -326,35 +263,11 @@ const styles = StyleSheet.create({
     marginBottom: 16,
     fontFamily: "Montserrat",
   },
-  input: {
-    height: 40,
-    borderColor: "#ccc",
-    borderWidth: 1,
-    paddingHorizontal: 10,
-    marginBottom: 12,
-    backgroundColor: "#f9f9f9",
-  },
   labelPreview: {
     width: 200,
     height: 150,
     alignSelf: "center",
     marginBottom: 12,
-  },
-  modalOverlay: {
-    flex: 1,
-    backgroundColor: "rgba(0,0,0,0.3)",
-    justifyContent: "center",
-  },
-  modalContent: {
-    margin: 20,
-    backgroundColor: "#fff",
-    borderRadius: 8,
-    padding: 16,
-  },
-  modalTitle: {
-    fontSize: 18,
-    fontWeight: "bold",
-    marginBottom: 8,
   },
   cameraButton: {
     backgroundColor: colors.melon,
@@ -379,4 +292,4 @@ const styles = StyleSheet.create({
   },
 });
 
-export default Home;
+export default HomeScreen;

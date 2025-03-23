@@ -7,7 +7,7 @@ import colors from "../assets/colors/colors";
 
 type AuthStackParamList = {
   Welcome: undefined;
-  Login: undefined;
+  SignIn: undefined;
   SignUp: undefined;
 };
 
@@ -20,7 +20,7 @@ export default function WelcomeScreen() {
   const navigation = useNavigation<WelcomeScreenNavigationProp>();
 
   const handleSignInPress = () => {
-    navigation.navigate("Login");
+    navigation.navigate("SignIn");
   };
 
   const handleGetStartedPress = () => {

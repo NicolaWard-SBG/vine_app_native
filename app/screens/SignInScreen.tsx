@@ -9,17 +9,17 @@ import {
 } from "react-native";
 import { useNavigation } from "@react-navigation/native";
 import Ionicons from "react-native-vector-icons/Ionicons";
-import { AuthContext } from "../../AppContext"; // or where you export it
-import { auth } from "../../firebaseConfig";
+import { AuthContext } from "../contexts/AuthContext"; // or where you export it
+import { auth } from "../services/firebaseConfig";
 import { signInWithEmailAndPassword } from "firebase/auth";
 
-export default function Login() {
+export default function SignIn() {
   const navigation = useNavigation();
   const { setIsAuthenticated, setCurrentUser } = useContext(AuthContext);
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
 
-  const handleLogin = async () => {
+  const handleSignIn = async () => {
     if (!email || !password) {
       Alert.alert("Error", "Please fill out all fields.");
       return;
@@ -67,7 +67,7 @@ export default function Login() {
         style={styles.input}
         autoCapitalize="none"
       />
-      <TouchableOpacity style={styles.button} onPress={handleLogin}>
+      <TouchableOpacity style={styles.button} onPress={handleSignIn}>
         <Text style={styles.buttonText}>SIGN IN</Text>
       </TouchableOpacity>
     </View>
