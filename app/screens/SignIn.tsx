@@ -1,4 +1,3 @@
-// Login.tsx
 import React, { useState, useContext } from "react";
 import {
   View,
@@ -8,21 +7,14 @@ import {
   Alert,
   StyleSheet,
 } from "react-native";
-import { useSQLiteContext } from "expo-sqlite";
 import { useNavigation } from "@react-navigation/native";
 import Ionicons from "react-native-vector-icons/Ionicons";
-import { AuthContext } from "../../App";
-
-interface User {
-  id: number;
-  email: string;
-  username: string;
-  password: string;
-}
+import { AuthContext } from "../../AppContext"; // or where you export it
+import { auth } from "../../firebaseConfig";
+import { signInWithEmailAndPassword } from "firebase/auth";
 
 export default function Login() {
   const navigation = useNavigation();
-  const db = useSQLiteContext();
   const { setIsAuthenticated, setCurrentUser } = useContext(AuthContext);
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
@@ -33,23 +25,18 @@ export default function Login() {
       return;
     }
     try {
-      // Use a query to get the user record based on email and password.
-      // Note: db.getAllSync is assumed to return an array of users.
-      const users = await db.getAllSync<User>(
-        "SELECT * FROM User WHERE email = ? AND password = ?",
-        [email, password]
+      const userCredential = await signInWithEmailAndPassword(
+        auth,
+        email,
+        password
       );
-      if (users && users.length > 0) {
-        const loggedInUser = users[0]; // Type is now User
-        Alert.alert("Success", "Logged in successfully!");
-        setCurrentUser({ id: loggedInUser.id, email: loggedInUser.email });
-        setIsAuthenticated(true);
-      } else {
-        Alert.alert("Error", "Invalid email or password.");
-      }
-    } catch (error) {
+      const loggedInUser = userCredential.user;
+      Alert.alert("Success", "Logged in successfully!");
+      setCurrentUser({ id: loggedInUser.uid, email: loggedInUser.email });
+      setIsAuthenticated(true);
+    } catch (error: any) {
       console.error("Error logging in:", error);
-      Alert.alert("Error", "Could not log in. Please try again.");
+      Alert.alert("Error", error.message || "Invalid email or password.");
     }
   };
 

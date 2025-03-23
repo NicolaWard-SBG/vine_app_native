@@ -1,4 +1,4 @@
-import React, { useState } from "react";
+import React, { useState, useContext } from "react";
 import {
   View,
   Text,
@@ -7,14 +7,16 @@ import {
   StyleSheet,
   TouchableOpacity,
 } from "react-native";
-import { useSQLiteContext } from "expo-sqlite";
 import { useNavigation } from "@react-navigation/native";
 import Ionicons from "react-native-vector-icons/Ionicons";
 import colors from "../assets/colors/colors";
+import { AuthContext } from "../../AppContext"; // or where you export it
+import { auth } from "../../firebaseConfig";
+import { createUserWithEmailAndPassword, updateProfile } from "firebase/auth";
 
 export default function SignUp() {
   const navigation = useNavigation();
-  const db = useSQLiteContext();
+  const { setIsAuthenticated, setCurrentUser } = useContext(AuthContext);
   const [username, setUsername] = useState("");
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
@@ -30,25 +32,26 @@ export default function SignUp() {
       return;
     }
     try {
-      // Optionally check if a user with this email already exists
-      const existingUser = await db.getAllSync(
-        "SELECT * FROM User WHERE email = ?",
-        [email]
+      const userCredential = await createUserWithEmailAndPassword(
+        auth,
+        email,
+        password
       );
-      if (existingUser && existingUser.length > 0) {
-        Alert.alert("Error", "A user with that email already exists.");
-        return;
-      }
-      // Insert the new user
-      await db.runAsync(
-        "INSERT INTO User (username, email, password) VALUES (?, ?, ?)",
-        [username, email, password]
-      );
+      // Optionally update the user's display name
+      await updateProfile(userCredential.user, { displayName: username });
+      setCurrentUser({
+        id: userCredential.user.uid,
+        email: userCredential.user.email,
+      });
+      setIsAuthenticated(true);
       Alert.alert("Success", "User created successfully!");
-      // Optionally, navigate to the Login screen or set auth state here
-    } catch (error) {
+      // Navigate to your main app screen if needed.
+    } catch (error: any) {
       console.error("Error signing up:", error);
-      Alert.alert("Error", "Could not create user. Please try again.");
+      Alert.alert(
+        "Error",
+        error.message || "Could not create user. Please try again."
+      );
     }
   };
 

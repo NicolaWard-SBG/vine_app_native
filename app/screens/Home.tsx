@@ -15,10 +15,17 @@ import {
   Platform,
 } from "react-native";
 import { Picker } from "@react-native-picker/picker";
-import { useSQLiteContext } from "expo-sqlite";
-import { AuthContext } from "../../App";
+import { AuthContext } from "../../AppContext";
 import colors from "../assets/colors/colors";
 import * as ImagePicker from "expo-image-picker";
+import NetInfo from "@react-native-community/netinfo";
+import { addDoc, collection } from "firebase/firestore";
+import { db } from "../../firebaseConfig";
+import {
+  saveWineToStorage,
+  getWinesFromStorage,
+  updateWinesInStorage,
+} from "../../storage";
 
 // Reusable form input component
 interface FormInputProps {
@@ -86,10 +93,8 @@ const WineTypeModal = ({
 );
 
 function Home() {
-  const db = useSQLiteContext();
   const { currentUser } = useContext(AuthContext);
 
-  // Form state variables
   const [wineMaker, setWineMaker] = useState("");
   const [wineName, setWineName] = useState("");
   const [grape, setGrape] = useState("");
@@ -101,7 +106,21 @@ function Home() {
   const [labelImage, setLabelImage] = useState<string | null>(null);
   const [showTypePicker, setShowTypePicker] = useState(false);
 
-  // Request camera and media library permissions when component mounts
+  const syncWines = async () => {
+    const wines = await getWinesFromStorage();
+    const unsynced = wines.filter((w: any) => !w.synced);
+
+    for (const wine of unsynced) {
+      try {
+        await addDoc(collection(db, "wines"), wine);
+        wine.synced = true;
+      } catch (e: any) {
+        console.log("Sync failed for wine:", wine.wineName, e.message, e);
+      }
+    }
+
+    await updateWinesInStorage(wines);
+  };
   useEffect(() => {
     (async () => {
       const cameraPermission =
@@ -127,10 +146,8 @@ function Home() {
     })();
   }, []);
 
-  // Launch the camera to take a picture
   const handleTakePicture = async () => {
     try {
-      // Check permissions again before launching camera
       const { status: cameraStatus } =
         await ImagePicker.getCameraPermissionsAsync();
 
@@ -152,20 +169,15 @@ function Home() {
         base64: false,
       });
 
-      if (!result.canceled && result.assets && result.assets.length > 0) {
-        const { uri } = result.assets[0];
-        setLabelImage(uri);
+      if (!result.canceled && result.assets?.length > 0) {
+        setLabelImage(result.assets[0].uri);
       }
     } catch (error) {
       console.error("Error launching camera:", error);
-      Alert.alert(
-        "Camera Error",
-        "There was a problem accessing the camera. Please check your permissions."
-      );
+      Alert.alert("Camera Error", "There was a problem accessing the camera.");
     }
   };
 
-  // Reset form fields after successful submission
   const resetForm = () => {
     setWineMaker("");
     setWineName("");
@@ -178,46 +190,36 @@ function Home() {
     setLabelImage(null);
   };
 
-  // Insert wine record into the database
   const handleAddWine = async () => {
     if (!currentUser) {
       Alert.alert("Error", "User not logged in.");
       return;
     }
-    if (
-      !wineMaker ||
-      !wineName ||
-      !grape ||
-      !type ||
-      !year ||
-      !rating ||
-      !region
-    ) {
-      Alert.alert("Error", "Please fill out all fields.");
-      return;
+
+    const wine = {
+      wineMaker,
+      wineName,
+      grape,
+      type,
+      year: parseInt(year),
+      rating: parseFloat(rating),
+      region,
+      notes,
+      labelImage,
+      userId: currentUser.id,
+      synced: false,
+      timestamp: new Date().toISOString(),
+    };
+
+    await saveWineToStorage(wine);
+
+    const state = await NetInfo.fetch();
+    if (state.isConnected) {
+      await syncWines();
     }
-    try {
-      await db.runAsync(
-        "INSERT INTO Wine (wineMaker, wineName, grape, type, year, rating, region, notes, userId, labelImage) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?)",
-        [
-          wineMaker,
-          wineName,
-          grape,
-          type,
-          parseInt(year),
-          parseFloat(rating),
-          region,
-          notes,
-          currentUser.id,
-          labelImage,
-        ]
-      );
-      Alert.alert("Success", "Wine added to your cellar!");
-      resetForm();
-    } catch (error) {
-      console.error("Error adding wine:", error);
-      Alert.alert("Error", "Could not add wine. Please try again.");
-    }
+
+    Alert.alert("Success", "Wine saved!");
+    resetForm();
   };
 
   return (
@@ -226,15 +228,13 @@ function Home() {
         behavior={Platform.OS === "ios" ? "padding" : "height"}
         style={styles.container}
       >
-        <ScrollView
-          contentContainerStyle={styles.scrollContent}
-          showsVerticalScrollIndicator={true}
-        >
+        <ScrollView contentContainerStyle={styles.scrollContent}>
           <Text style={styles.title}>SIP & STORE</Text>
           <Text style={styles.subtitle}>
             Capture your wine's story — snap a label, log the details, and rate
             every sip.
           </Text>
+
           <FormInput
             placeholder="Wine Maker"
             value={wineMaker}
@@ -280,7 +280,6 @@ function Home() {
             onChangeText={setNotes}
           />
 
-          {/* Display image preview if available */}
           {labelImage && (
             <Image source={{ uri: labelImage }} style={styles.labelPreview} />
           )}
@@ -296,7 +295,6 @@ function Home() {
             <Text style={styles.buttonText}>ADD WINE</Text>
           </TouchableOpacity>
 
-          {/* Add extra space at the bottom for scrolling */}
           <View style={styles.bottomPadding} />
         </ScrollView>
 
@@ -312,18 +310,9 @@ function Home() {
 }
 
 const styles = StyleSheet.create({
-  safeArea: {
-    flex: 1,
-    backgroundColor: colors.seashell,
-  },
-  container: {
-    flex: 1,
-    backgroundColor: colors.seashell,
-  },
-  scrollContent: {
-    padding: 16,
-    paddingBottom: 40, // Extra padding at the bottom
-  },
+  safeArea: { flex: 1, backgroundColor: colors.seashell },
+  container: { flex: 1, backgroundColor: colors.seashell },
+  scrollContent: { padding: 16, paddingBottom: 40 },
   title: {
     marginTop: 40,
     fontSize: 24,
@@ -333,7 +322,7 @@ const styles = StyleSheet.create({
   subtitle: {
     marginTop: 10,
     fontSize: 12,
-    fontWeight: "medium",
+    fontWeight: "500",
     marginBottom: 16,
     fontFamily: "Montserrat",
   },
@@ -370,17 +359,13 @@ const styles = StyleSheet.create({
   cameraButton: {
     backgroundColor: colors.melon,
     paddingVertical: 12,
-    paddingHorizontal: 20,
     alignItems: "center",
-    justifyContent: "center",
     marginBottom: 12,
   },
   button: {
     backgroundColor: colors.faluRed,
     paddingVertical: 12,
-    paddingHorizontal: 20,
     alignItems: "center",
-    justifyContent: "center",
     marginBottom: 12,
   },
   buttonText: {

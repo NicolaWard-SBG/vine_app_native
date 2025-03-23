@@ -9,11 +9,11 @@ import {
   SafeAreaView,
   Image,
 } from "react-native";
-import { useSQLiteContext } from "expo-sqlite";
-import { Wine } from "../../types";
-import { Swipeable } from "react-native-gesture-handler";
-import { AuthContext } from "../../App";
+import { AuthContext } from "../../AppContext";
 import colors from "../assets/colors/colors";
+import { Swipeable } from "react-native-gesture-handler";
+import { getWinesFromStorage, deleteWineFromStorage } from "../../storage";
+import { Wine } from "../../types";
 
 const FILTER_TYPES = ["All", "Red", "White", "Rose", "Sparkling", "Fortified"];
 
@@ -24,9 +24,7 @@ interface WineItemProps {
 
 const WineItem = ({ wine, onDelete }: WineItemProps) => {
   const renderRightActions = () => (
-    <View
-      style={[styles.deleteButtonContainer, { height: styles.wineItem.height }]}
-    >
+    <View style={[styles.deleteButtonContainer]}>
       <Button title="Delete" color="white" onPress={() => onDelete(wine.id)} />
     </View>
   );
@@ -60,7 +58,6 @@ const WineItem = ({ wine, onDelete }: WineItemProps) => {
 function MyCellar() {
   const [wines, setWines] = useState<Wine[]>([]);
   const [filterType, setFilterType] = useState<string | null>(null);
-  const db = useSQLiteContext();
   const { currentUser } = useContext(AuthContext);
 
   const fetchData = useCallback(async () => {
@@ -68,23 +65,21 @@ function MyCellar() {
       setWines([]);
       return;
     }
-
     try {
-      const query = filterType
-        ? "SELECT * FROM Wine WHERE type = ? AND userId = ?"
-        : "SELECT * FROM Wine WHERE userId = ?";
-      const params = filterType
-        ? [filterType, currentUser.id]
-        : [currentUser.id];
-
-      const result = await db.getAllAsync<Wine[]>(query, params);
-      console.log("Fetched result:", result);
-      setWines(Array.isArray(result) ? result.flat() : []);
+      // Retrieve wines stored locally
+      const localWines: Wine[] = await getWinesFromStorage();
+      // Filter by userId and by type (if a filter is set)
+      const filtered = localWines.filter(
+        (w: any) =>
+          w.userId === currentUser.id &&
+          (filterType ? w.type === filterType : true)
+      );
+      setWines(filtered);
     } catch (error) {
-      console.error("Error fetching data:", error);
+      console.error("Error loading wines:", error);
       setWines([]);
     }
-  }, [db, filterType, currentUser]);
+  }, [filterType, currentUser]);
 
   useEffect(() => {
     fetchData();
@@ -102,10 +97,7 @@ function MyCellar() {
         style: "destructive",
         onPress: async () => {
           try {
-            await db.runAsync("DELETE FROM Wine WHERE id = ? AND userId = ?", [
-              id,
-              currentUser.id,
-            ]);
+            await deleteWineFromStorage(id);
             setWines((prevWines) => prevWines.filter((wine) => wine.id !== id));
             Alert.alert("Success", "Wine deleted successfully.");
           } catch (error) {
@@ -173,7 +165,6 @@ const styles = StyleSheet.create({
   },
   wineItem: {
     flexDirection: "row",
-    justifyContent: "flex-start",
     alignItems: "center",
     padding: 10,
     backgroundColor: "#f9f9f9",
