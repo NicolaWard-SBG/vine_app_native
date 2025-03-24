@@ -8,6 +8,7 @@ ENV['RCT_NEW_ARCH_ENABLED'] = podfile_properties['newArchEnabled'] == 'true' ? '
 ENV['EX_DEV_CLIENT_NETWORK_INSPECTOR'] = podfile_properties['EX_DEV_CLIENT_NETWORK_INSPECTOR']
 
 platform :ios, podfile_properties['ios.deploymentTarget'] || '15.1'
+use_modular_headers!
 install! 'cocoapods',
   :deterministic_uuids => false
 
@@ -15,6 +16,8 @@ prepare_react_native_project!
 
 target 'VineApp' do
   use_expo_modules!
+
+  use_frameworks! :linkage => :static
 
   if ENV['EXPO_USE_COMMUNITY_AUTOLINKING'] == '1'
     config_command = ['node', '-e', "process.argv=['', '', 'config'];require('@react-native-community/cli').run()"];
@@ -32,9 +35,6 @@ target 'VineApp' do
   end
 
   config = use_native_modules!(config_command)
-
-  use_frameworks! :linkage => podfile_properties['ios.useFrameworks'].to_sym if podfile_properties['ios.useFrameworks']
-  use_frameworks! :linkage => ENV['USE_FRAMEWORKS'].to_sym if ENV['USE_FRAMEWORKS']
 
   use_react_native!(
     :path => config[:reactNativePath],
