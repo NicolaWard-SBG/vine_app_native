@@ -14,6 +14,10 @@ import colors from "../assets/colors/colors";
 import { Wine } from "../../types";
 import { useWines } from "../hooks/useWines";
 import { deleteWineFromStorage } from "../services/storage";
+import {
+  deleteWineFromFirebase,
+  fetchUserWines,
+} from "../services/syncManager";
 import { WineItem } from "../components/WineItem";
 
 const FILTER_TYPES = ["All", "Red", "White", "Rose", "Sparkling", "Fortified"];
@@ -37,6 +41,15 @@ function MyCellar() {
       Alert.alert("Error", "No user is logged in.");
       return;
     }
+
+    // Find the wine to be deleted
+    const wineToDelete = wines.find((wine) => wine.id === id);
+
+    if (!wineToDelete) {
+      Alert.alert("Error", "Wine not found.");
+      return;
+    }
+
     Alert.alert("Delete Wine", "Are you sure you want to delete this wine?", [
       { text: "Cancel", style: "cancel" },
       {
@@ -44,7 +57,14 @@ function MyCellar() {
         style: "destructive",
         onPress: async () => {
           try {
+            // Delete from local storage
             await deleteWineFromStorage(id);
+
+            // If the wine has been synced to Firebase, delete it there too
+            if (wineToDelete.synced && wineToDelete.firebaseId) {
+              await deleteWineFromFirebase(wineToDelete.firebaseId);
+            }
+
             // Refresh the wines list after deletion
             refetch();
             Alert.alert("Success", "Wine deleted successfully.");
@@ -62,6 +82,9 @@ function MyCellar() {
 
   const onRefresh = useCallback(async () => {
     setRefreshing(true);
+    // First fetch from Firebase to ensure we have latest data
+    await fetchUserWines();
+    // Then refresh local display
     await refetch();
     setRefreshing(false);
   }, [refetch]);
@@ -91,6 +114,8 @@ function MyCellar() {
             data={wines}
             keyExtractor={(item) => item.id.toString()}
             renderItem={renderWineItem}
+            refreshing={refreshing}
+            onRefresh={onRefresh}
           />
         )}
       </View>

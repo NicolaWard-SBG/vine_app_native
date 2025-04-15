@@ -2,15 +2,18 @@ export type WineType = "Red" | "White" | "Rose" | "Sparkling" | "Fortified";
 
 export interface Wine {
   id: number;
-  wineMaker: string;
   wineName: string;
+  wineMaker: string;
   grape: string;
-  type: WineType;
-  year?: number;
-  rating?: number;
-  region?: string;
-  notes?: string;
+  type: string;
+  year: string;
+  rating: string;
+  region: string;
+  notes: string;
   labelImage?: string;
+  synced?: boolean;
+  firebaseId?: string;
+  userId?: string;
 }
 
 export interface User {

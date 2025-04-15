@@ -45,7 +45,6 @@ export default function SignUp() {
       });
       setIsAuthenticated(true);
       Alert.alert("Success", "User created successfully!");
-      // Navigate to your main app screen if needed.
     } catch (error: any) {
       console.error("Error signing up:", error);
       Alert.alert(
