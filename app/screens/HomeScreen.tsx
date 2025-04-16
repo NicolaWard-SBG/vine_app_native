@@ -15,8 +15,7 @@ import { AuthContext } from "../contexts/AuthContext";
 import colors from "../assets/colors/colors";
 import * as ImagePicker from "expo-image-picker";
 import NetInfo from "@react-native-community/netinfo";
-import { addDoc, collection } from "firebase/firestore";
-import { db } from "../services/firebaseConfig";
+import { syncWines } from "../services/syncManager";
 import {
   saveWineToStorage,
   getWinesFromStorage,
@@ -24,6 +23,7 @@ import {
 } from "../services/storage";
 import { FormInput } from "../components/FormInput";
 import { WineTypeModal } from "../components/WineTypeModal";
+import { db, auth } from "../services/firebaseConfig"; // if needed for other calls
 
 function HomeScreen() {
   const { currentUser } = useContext(AuthContext);
@@ -38,22 +38,6 @@ function HomeScreen() {
   const [notes, setNotes] = useState("");
   const [labelImage, setLabelImage] = useState<string | null>(null);
   const [showTypePicker, setShowTypePicker] = useState(false);
-
-  const syncWines = async () => {
-    const wines = await getWinesFromStorage();
-    const unsynced = wines.filter((w: any) => !w.synced);
-
-    for (const wine of unsynced) {
-      try {
-        await addDoc(collection(db, "wines"), wine);
-        wine.synced = true;
-      } catch (e: any) {
-        console.log("Sync failed for wine:", wine.wineName, e.message, e);
-      }
-    }
-
-    await updateWinesInStorage(wines);
-  };
 
   useEffect(() => {
     (async () => {
@@ -130,6 +114,7 @@ function HomeScreen() {
       return;
     }
 
+    const uid = currentUser.id;
     const wine = {
       wineMaker,
       wineName,
@@ -140,7 +125,7 @@ function HomeScreen() {
       region,
       notes,
       labelImage,
-      userId: currentUser.id,
+      userId: uid,
       synced: false,
       timestamp: new Date().toISOString(),
     };
@@ -233,7 +218,6 @@ function HomeScreen() {
           <View style={styles.bottomPadding} />
         </ScrollView>
 
-        {/* Render the WineTypeModal only once */}
         <WineTypeModal
           visible={showTypePicker}
           selectedType={type}

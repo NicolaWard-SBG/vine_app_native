@@ -19,13 +19,16 @@ export const syncWines = async () => {
 
   for (const wine of unsynced) {
     try {
-      const wineData = {
-        ...wine,
-        userId: wine.userId || auth.currentUser.uid,
+      const { synced, firebaseId, ...wineData } = wine;
+
+      const firestoreData = {
+        ...wineData,
+        userId: wineData.userId || auth.currentUser.uid,
+        synced: true,
       };
 
       // Add to Firestore
-      const docRef = await addDoc(collection(db, "wines"), wineData);
+      const docRef = await addDoc(collection(db, "wines"), firestoreData);
 
       // Update local wine with sync status and Firestore ID
       wine.synced = true;
@@ -67,15 +70,21 @@ export const fetchUserWines = async () => {
 
     // Then override with Firebase wines (prioritizing remote data)
     firebaseWines.forEach((wine: any) => {
-      if (mergedWinesMap.has(wine.id)) {
-        // Update existing wine with Firebase data (preserving local id)
-        mergedWinesMap.set(wine.id, {
+      const firebaseId = wine.firebaseId || wine.id;
+      const existing = [...mergedWinesMap.values()].find(
+        (w: any) => w.firebaseId === firebaseId
+      );
+
+      if (existing) {
+        // update existing wine
+        mergedWinesMap.set(existing.id, {
+          ...existing,
           ...wine,
           synced: true,
         });
       } else {
-        // Add new wine from Firebase
-        mergedWinesMap.set(wine.id, wine);
+        // add fresh
+        mergedWinesMap.set(wine.id || Date.now(), wine);
       }
     });
 
@@ -96,7 +105,10 @@ export const deleteWineFromFirebase = async (firebaseId: string) => {
 
   try {
     await deleteDoc(doc(db, "wines", firebaseId));
+    console.log("Successfully deleted wine from Firebase:", firebaseId);
+    return true;
   } catch (error) {
     console.error("Error deleting wine from Firebase:", error);
+    throw error; // Re-throw to allow caller to handle
   }
 };

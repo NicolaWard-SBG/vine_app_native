@@ -6,7 +6,7 @@ export interface Wine {
   wineMaker: string;
   grape: string;
   type: string;
-  year: string;
+  year: number;
   rating: string;
   region: string;
   notes: string;
