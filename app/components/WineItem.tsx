@@ -6,7 +6,7 @@ import { Wine } from "../../types";
 
 export interface WineItemProps {
   wine: Wine;
-  onDelete: (id: number) => void;
+  onDelete: (id: string) => void; // Changed type from number to string
 }
 
 export const WineItem: React.FC<WineItemProps> = ({ wine, onDelete }) => {

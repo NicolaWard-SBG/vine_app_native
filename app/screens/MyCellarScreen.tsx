@@ -36,7 +36,8 @@ function MyCellar() {
     }, [refetch])
   );
 
-  const deleteWine = async (id: number) => {
+  const deleteWine = async (id: string) => {
+    // Changed from number to string
     if (!currentUser?.id) {
       Alert.alert("Error", "No user is logged in.");
       return;
@@ -61,8 +62,8 @@ function MyCellar() {
             await deleteWineFromStorage(id);
 
             // If the wine has been synced to Firebase, delete it there too
-            if (wineToDelete.synced && wineToDelete.firebaseId) {
-              await deleteWineFromFirebase(wineToDelete.firebaseId);
+            if (wineToDelete.synced) {
+              await deleteWineFromFirebase(wineToDelete.id);
             }
 
             // Refresh the wines list after deletion

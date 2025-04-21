@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from "react";
+import React, { useState, useRef, useEffect } from "react";
 import { ActivityIndicator, Text, View } from "react-native";
 import { NavigationContainer } from "@react-navigation/native";
 import { GestureHandlerRootView } from "react-native-gesture-handler";
@@ -19,6 +19,8 @@ export default function App() {
     email: string | null;
   } | null>(null);
   const [isLoading, setIsLoading] = useState(true);
+
+  const syncingRef = useRef(false);
 
   // Load custom fonts
   useEffect(() => {
@@ -53,13 +55,15 @@ export default function App() {
           console.log("User wines fetched from Firebase");
         } catch (error) {
           console.error("Error fetching user wines:", error);
+        } finally {
+          setIsLoading(false);
         }
       } else {
         // User is signed out
         setIsAuthenticated(false);
         setCurrentUser(null);
+        setIsLoading(false);
       }
-      setIsLoading(false);
     });
 
     // Clean up the listener when component unmounts
@@ -68,10 +72,15 @@ export default function App() {
 
   // Sync local data when device reconnects
   useEffect(() => {
-    const unsubscribe = NetInfo.addEventListener((state) => {
-      if (state.isConnected && isAuthenticated) {
-        console.log("Device connected to the internet, syncing wines...");
-        syncWines();
+    const unsubscribe = NetInfo.addEventListener(async (state) => {
+      if (state.isConnected && isAuthenticated && !syncingRef.current) {
+        try {
+          syncingRef.current = true;
+          console.log("Device connected to the internet, syncing wines...");
+          await syncWines();
+        } finally {
+          syncingRef.current = false;
+        }
       }
     });
     return () => unsubscribe();
