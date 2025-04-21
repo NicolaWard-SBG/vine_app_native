@@ -14,8 +14,8 @@ export const useWines = (filterType: string | null) => {
     }
     try {
       const localWines: Wine[] = await getWinesFromStorage();
-      const filtered = localWines.filter(
-        (w: any) =>
+      const filtered: Wine[] = localWines.filter(
+        (w: Wine) =>
           w.userId === currentUser.id &&
           (filterType ? w.type === filterType : true)
       );

@@ -14,7 +14,6 @@ export interface Wine {
   synced?: boolean;
   userId?: string;
 }
-
 export interface User {
   id: string;
   username: string;
