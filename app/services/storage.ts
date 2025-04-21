@@ -1,3 +1,4 @@
+// storage.ts
 import AsyncStorage from "@react-native-async-storage/async-storage";
 import { auth, db } from "./firebaseConfig";
 import { collection, doc } from "firebase/firestore";
@@ -12,7 +13,7 @@ export const getWinesFromStorage = async () => {
 export const saveWineToStorage = async (wineData: any) => {
   const wines = await getWinesFromStorage();
 
-  // Generate a Firestore DocumentReference with auto‑ID
+  // 1) Generate a Firestore auto‑ID for this wine
   const wineRef = doc(collection(db, "wines"));
   const id = wineRef.id;
 
@@ -22,6 +23,7 @@ export const saveWineToStorage = async (wineData: any) => {
     synced: false,
   };
 
+  // 2) Persist locally with that ID
   await AsyncStorage.setItem(STORAGE_KEY, JSON.stringify([...wines, newWine]));
   return newWine;
 };
@@ -32,7 +34,7 @@ export const updateWinesInStorage = async (updated: any[]) => {
 
 export const deleteWineFromStorage = async (id: string) => {
   const wines = await getWinesFromStorage();
-  const updated = wines.filter((wine: any) => wine.id !== id);
-  await AsyncStorage.setItem(STORAGE_KEY, JSON.stringify(updated));
-  return updated;
+  const filtered = wines.filter((w: any) => w.id !== id);
+  await AsyncStorage.setItem(STORAGE_KEY, JSON.stringify(filtered));
+  return filtered;
 };

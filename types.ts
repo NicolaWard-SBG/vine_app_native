@@ -12,7 +12,6 @@ export interface Wine {
   notes: string;
   labelImage?: string;
   synced?: boolean;
-  userId?: string;
 }
 
 export interface User {
