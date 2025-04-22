@@ -1,4 +1,4 @@
-import React, { useState, useContext, useEffect } from "react";
+import React, { useState, useContext } from "react";
 import {
   SafeAreaView,
   KeyboardAvoidingView,
@@ -11,21 +11,16 @@ import {
   Alert,
   View,
 } from "react-native";
+import NetInfo from "@react-native-community/netinfo";
 import { AuthContext } from "../contexts/AuthContext";
 import colors from "../assets/colors/colors";
-import * as ImagePicker from "expo-image-picker";
-import NetInfo from "@react-native-community/netinfo";
 import { syncWines } from "../services/syncManager";
-import {
-  saveWineToStorage,
-  getWinesFromStorage,
-  updateWinesInStorage,
-} from "../services/storage";
+import { saveWineToStorage } from "../services/storage";
 import { FormInput } from "../components/FormInput";
 import { WineTypeModal } from "../components/WineTypeModal";
-import { db, auth } from "../services/firebaseConfig"; // if needed for other calls
+import { takePhoto, pickFromLibrary } from "../services/photoManager"; // ← new
 
-function HomeScreen() {
+export default function HomeScreen() {
   const { currentUser } = useContext(AuthContext);
 
   const [wineMaker, setWineMaker] = useState("");
@@ -38,63 +33,6 @@ function HomeScreen() {
   const [notes, setNotes] = useState("");
   const [labelImage, setLabelImage] = useState<string | null>(null);
   const [showTypePicker, setShowTypePicker] = useState(false);
-
-  useEffect(() => {
-    (async () => {
-      const cameraPermission =
-        await ImagePicker.requestCameraPermissionsAsync();
-      const mediaLibraryPermission =
-        await ImagePicker.requestMediaLibraryPermissionsAsync();
-
-      if (!cameraPermission.granted) {
-        Alert.alert(
-          "Permission Required",
-          "Camera access is required to take pictures of wine labels.",
-          [{ text: "OK" }]
-        );
-      }
-
-      if (!mediaLibraryPermission.granted) {
-        Alert.alert(
-          "Permission Required",
-          "Media library access is required to save wine label images.",
-          [{ text: "OK" }]
-        );
-      }
-    })();
-  }, []);
-
-  const handleTakePicture = async () => {
-    try {
-      const { status: cameraStatus } =
-        await ImagePicker.getCameraPermissionsAsync();
-
-      if (cameraStatus !== "granted") {
-        const { status } = await ImagePicker.requestCameraPermissionsAsync();
-        if (status !== "granted") {
-          Alert.alert(
-            "Permission Denied",
-            "We need camera permissions to take pictures."
-          );
-          return;
-        }
-      }
-
-      const result = await ImagePicker.launchCameraAsync({
-        allowsEditing: true,
-        aspect: [4, 3],
-        quality: 0.5,
-        base64: false,
-      });
-
-      if (!result.canceled && result.assets?.length > 0) {
-        setLabelImage(result.assets[0].uri);
-      }
-    } catch (error) {
-      console.error("Error launching camera:", error);
-      Alert.alert("Camera Error", "There was a problem accessing the camera.");
-    }
-  };
 
   const resetForm = () => {
     setWineMaker("");
@@ -141,6 +79,16 @@ function HomeScreen() {
     resetForm();
   };
 
+  const onTakePhoto = async () => {
+    const uri = await takePhoto();
+    if (uri) setLabelImage(uri);
+  };
+
+  const onPickLibrary = async () => {
+    const uri = await pickFromLibrary();
+    if (uri) setLabelImage(uri);
+  };
+
   return (
     <SafeAreaView style={styles.safeArea}>
       <KeyboardAvoidingView
@@ -169,7 +117,6 @@ function HomeScreen() {
             value={grape}
             onChangeText={setGrape}
           />
-          {/* Wine Type Input with onPressIn to trigger the modal */}
           <FormInput
             placeholder="Wine Type (Tap to select)"
             value={type}
@@ -204,12 +151,17 @@ function HomeScreen() {
             <Image source={{ uri: labelImage }} style={styles.labelPreview} />
           )}
 
-          <TouchableOpacity
-            style={styles.cameraButton}
-            onPress={handleTakePicture}
-          >
-            <Text style={styles.buttonText}>ADD LABEL PHOTOGRAPH</Text>
-          </TouchableOpacity>
+          <View style={styles.photoButtonsContainer}>
+            <TouchableOpacity style={styles.cameraButton} onPress={onTakePhoto}>
+              <Text style={styles.buttonText}>TAKE LABEL PHOTO</Text>
+            </TouchableOpacity>
+            <TouchableOpacity
+              style={styles.cameraButton}
+              onPress={onPickLibrary}
+            >
+              <Text style={styles.buttonText}>CHOOSE FROM LIBRARY</Text>
+            </TouchableOpacity>
+          </View>
 
           <TouchableOpacity style={styles.button} onPress={handleAddWine}>
             <Text style={styles.buttonText}>ADD WINE</Text>
@@ -252,11 +204,18 @@ const styles = StyleSheet.create({
     alignSelf: "center",
     marginBottom: 12,
   },
+  photoButtonsContainer: {
+    flexDirection: "row",
+    justifyContent: "space-between",
+    marginBottom: 12,
+    gap: 10,
+  },
   cameraButton: {
     backgroundColor: colors.melon,
     paddingVertical: 12,
+    flex: 1,
     alignItems: "center",
-    marginBottom: 12,
+    justifyContent: "center",
   },
   button: {
     backgroundColor: colors.faluRed,
@@ -269,10 +228,8 @@ const styles = StyleSheet.create({
     fontSize: 16,
     fontWeight: "600",
     fontFamily: "Montserrat",
+    textAlign: "center",
+    paddingHorizontal: 8,
   },
-  bottomPadding: {
-    height: 20,
-  },
+  bottomPadding: { height: 20 },
 });
-
-export default HomeScreen;
