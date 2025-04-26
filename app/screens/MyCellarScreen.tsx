@@ -1,4 +1,4 @@
-import React, { useState, useContext, useCallback } from "react";
+import React, { useState, useContext, useCallback, useRef } from "react";
 import {
   View,
   Text,
@@ -8,7 +8,11 @@ import {
   Alert,
   SafeAreaView,
 } from "react-native";
-import { useFocusEffect, useNavigation } from "@react-navigation/native";
+import {
+  useFocusEffect,
+  useNavigation,
+  useRoute,
+} from "@react-navigation/native";
 import { AuthContext } from "../contexts/AuthContext";
 import colors from "../assets/colors/colors";
 import { Wine } from "../../types";
@@ -28,18 +32,48 @@ const FILTER_TYPES = ["All", "Red", "White", "Rose", "Sparkling", "Fortified"];
 
 function MyCellar() {
   const navigation = useNavigation<MyCellarNavProp>();
+  const route = useRoute();
   const [filterType, setFilterType] = useState<string | null>(null);
   const { wines, refetch } = useWines(filterType);
   const { currentUser } = useContext(AuthContext);
+
+  // Create a ref to store references to swipeable components
+  const swipeableRefs = useRef<Map<string, any>>(new Map());
 
   // Refresh data when screen comes into focus
   useFocusEffect(
     useCallback(() => {
       refetch();
+
+      // Close all open swipeables when screen comes into focus
+      // This is especially important when returning from edit screen
+      const routeParams = route.params as
+        | { disableSwipe?: boolean }
+        | undefined;
+      if (routeParams?.disableSwipe) {
+        closeAllSwipeables();
+      }
+
       // Return a cleanup function
       return () => {};
-    }, [refetch])
+    }, [refetch, route.params])
   );
+
+  // Function to close all open swipeables
+  const closeAllSwipeables = () => {
+    swipeableRefs.current.forEach((ref) => {
+      if (ref && ref.close) {
+        ref.close();
+      }
+    });
+  };
+
+  // Save reference to swipeable component
+  const saveSwipeableRef = (id: string, ref: any) => {
+    if (ref) {
+      swipeableRefs.current.set(id, ref);
+    }
+  };
 
   const deleteWine = async (id: string) => {
     if (!currentUser?.id) {
@@ -91,6 +125,8 @@ function MyCellar() {
     await fetchUserWines();
     // Then refresh local display
     await refetch();
+    // Close any open swipeables
+    closeAllSwipeables();
     setRefreshing(false);
   }, [refetch]);
 
@@ -98,7 +134,12 @@ function MyCellar() {
     <WineItem
       wine={item}
       onDelete={deleteWine}
-      onEdit={(wine) => navigation.navigate("Home", { wine })}
+      onEdit={(wine) => {
+        // Close all swipeables before navigating
+        closeAllSwipeables();
+        navigation.navigate("Home", { wine });
+      }}
+      swipeableRef={(ref) => saveSwipeableRef(item.id, ref)}
     />
   );
 
@@ -111,7 +152,11 @@ function MyCellar() {
             <Button
               key={type}
               title={type}
-              onPress={() => setFilterType(type === "All" ? null : type)}
+              onPress={() => {
+                setFilterType(type === "All" ? null : type);
+                // Close any open swipeables when changing filters
+                closeAllSwipeables();
+              }}
             />
           ))}
         </View>
@@ -125,6 +170,7 @@ function MyCellar() {
             renderItem={renderWineItem}
             refreshing={refreshing}
             onRefresh={onRefresh}
+            onScrollBeginDrag={closeAllSwipeables}
           />
         )}
       </View>

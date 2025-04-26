@@ -15,12 +15,14 @@ export interface WineItemProps {
   wine: Wine;
   onDelete: (id: string) => void;
   onEdit: (wine: Wine) => void;
+  swipeableRef?: (ref: any) => void; // Add this prop
 }
 
 export const WineItem: React.FC<WineItemProps> = ({
   wine,
   onDelete,
   onEdit,
+  swipeableRef, // Receive the ref function
 }) => {
   const [imageLoading, setImageLoading] = useState(false);
 
@@ -39,6 +41,7 @@ export const WineItem: React.FC<WineItemProps> = ({
   return (
     <View style={styles.swipeableItemWrapper}>
       <Swipeable
+        ref={swipeableRef} // Assign the ref
         renderLeftActions={renderLeftActions}
         renderRightActions={renderRightActions}
       >
@@ -57,8 +60,6 @@ export const WineItem: React.FC<WineItemProps> = ({
                 style={styles.wineLabelImage}
                 onLoadStart={() => setImageLoading(true)}
                 onLoadEnd={() => setImageLoading(false)}
-                // Progressive loading using resizeMode="cover"
-                // and lower initial quality for faster rendering
                 resizeMode="cover"
               />
             </View>
