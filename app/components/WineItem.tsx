@@ -6,10 +6,21 @@ import { Wine } from "../../types";
 
 export interface WineItemProps {
   wine: Wine;
-  onDelete: (id: string) => void; // Changed type from number to string
+  onDelete: (id: string) => void;
+  onEdit: (wine: Wine) => void;
 }
 
-export const WineItem: React.FC<WineItemProps> = ({ wine, onDelete }) => {
+export const WineItem: React.FC<WineItemProps> = ({
+  wine,
+  onDelete,
+  onEdit,
+}) => {
+  const renderLeftActions = () => (
+    <View style={styles.editButtonContainer}>
+      <Button title="Edit" color="white" onPress={() => onEdit(wine)} />
+    </View>
+  );
+
   const renderRightActions = () => (
     <View style={styles.deleteButtonContainer}>
       <Button title="Delete" color="white" onPress={() => onDelete(wine.id)} />
@@ -18,7 +29,10 @@ export const WineItem: React.FC<WineItemProps> = ({ wine, onDelete }) => {
 
   return (
     <View style={styles.swipeableItemWrapper}>
-      <Swipeable renderRightActions={renderRightActions}>
+      <Swipeable
+        renderLeftActions={renderLeftActions}
+        renderRightActions={renderRightActions}
+      >
         <View style={styles.wineItem}>
           {wine.labelImage && (
             <Image
@@ -69,6 +83,14 @@ const styles = StyleSheet.create({
     height: 80,
     marginRight: 10,
     borderRadius: 8,
+  },
+  editButtonContainer: {
+    justifyContent: "center",
+    alignItems: "center",
+    width: 80,
+    backgroundColor: colors.melon,
+    borderTopLeftRadius: 16,
+    borderBottomLeftRadius: 16,
   },
   deleteButtonContainer: {
     justifyContent: "center",

@@ -8,7 +8,7 @@ import {
   Alert,
   SafeAreaView,
 } from "react-native";
-import { useFocusEffect } from "@react-navigation/native";
+import { useFocusEffect, useNavigation } from "@react-navigation/native";
 import { AuthContext } from "../contexts/AuthContext";
 import colors from "../assets/colors/colors";
 import { Wine } from "../../types";
@@ -19,25 +19,29 @@ import {
   fetchUserWines,
 } from "../services/syncManager";
 import { WineItem } from "../components/WineItem";
+import { StackNavigationProp } from "@react-navigation/stack";
+import { AuthStackParamList } from "../navigation/AppNavigator";
+
+type MyCellarNavProp = StackNavigationProp<AuthStackParamList, "MyCellar">;
 
 const FILTER_TYPES = ["All", "Red", "White", "Rose", "Sparkling", "Fortified"];
 
 function MyCellar() {
+  const navigation = useNavigation<MyCellarNavProp>();
   const [filterType, setFilterType] = useState<string | null>(null);
   const { wines, refetch } = useWines(filterType);
   const { currentUser } = useContext(AuthContext);
 
-  // Add this useFocusEffect to refresh data when screen comes into focus
+  // Refresh data when screen comes into focus
   useFocusEffect(
     useCallback(() => {
       refetch();
-      // Return a cleanup function (optional)
+      // Return a cleanup function
       return () => {};
     }, [refetch])
   );
 
   const deleteWine = async (id: string) => {
-    // Changed from number to string
     if (!currentUser?.id) {
       Alert.alert("Error", "No user is logged in.");
       return;
@@ -78,7 +82,7 @@ function MyCellar() {
     ]);
   };
 
-  // Also add pull-to-refresh functionality to FlatList
+  // Pull-to-refresh functionality to FlatList
   const [refreshing, setRefreshing] = useState(false);
 
   const onRefresh = useCallback(async () => {
@@ -91,7 +95,11 @@ function MyCellar() {
   }, [refetch]);
 
   const renderWineItem = ({ item }: { item: Wine }) => (
-    <WineItem wine={item} onDelete={deleteWine} />
+    <WineItem
+      wine={item}
+      onDelete={deleteWine}
+      onEdit={(wine) => navigation.navigate("Home", { wine })}
+    />
   );
 
   return (

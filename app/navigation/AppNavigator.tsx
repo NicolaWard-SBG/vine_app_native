@@ -11,6 +11,7 @@ import SignInScreen from "../screens/SignInScreen";
 import SignUpScreen from "../screens/SignUpScreen";
 import WelcomeScreen from "../screens/WelcomeScreen";
 import { AuthContext } from "../contexts/AuthContext";
+import { Wine } from "../../types";
 
 // ---------------------------------------------------
 // 1. BOTTOM TAB NAVIGATOR (MainApp) for authenticated users
@@ -99,11 +100,11 @@ export function MainApp() {
 // ---------------------------------------------------
 // 2. STACK NAVIGATOR (AuthNavigator) for unauthenticated users
 // ---------------------------------------------------
-type AuthStackParamList = {
+export type AuthStackParamList = {
   Welcome: undefined;
   SignIn: undefined;
   SignUp: undefined;
-  Home: undefined;
+  Home: { wine?: Wine };
   MyCellar: undefined;
 };
 
@@ -118,6 +119,8 @@ export function AuthNavigator() {
       <AuthStack.Screen name="Welcome" component={WelcomeScreen} />
       <AuthStack.Screen name="SignIn" component={SignInScreen} />
       <AuthStack.Screen name="SignUp" component={SignUpScreen} />
+      <AuthStack.Screen name="Home" component={HomeScreen} />
+      <AuthStack.Screen name="MyCellar" component={MyCellarScreen} />
     </AuthStack.Navigator>
   );
 }

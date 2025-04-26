@@ -1,4 +1,4 @@
-import React, { useState, useContext } from "react";
+import React, { useState, useContext, useEffect } from "react";
 import {
   SafeAreaView,
   KeyboardAvoidingView,
@@ -15,13 +15,23 @@ import NetInfo from "@react-native-community/netinfo";
 import { AuthContext } from "../contexts/AuthContext";
 import colors from "../assets/colors/colors";
 import { syncWines } from "../services/syncManager";
-import { saveWineToStorage } from "../services/storage";
+import {
+  saveWineToStorage,
+  updateWinesInStorage,
+  getWinesFromStorage,
+} from "../services/storage";
 import { FormInput } from "../components/FormInput";
 import { WineTypeModal } from "../components/WineTypeModal";
-import { takePhoto, pickFromLibrary } from "../services/photoManager"; // ← new
+import { takePhoto, pickFromLibrary } from "../services/photoManager";
+import { useRoute, useNavigation } from "@react-navigation/native";
+import { Wine } from "../../types";
 
 export default function HomeScreen() {
   const { currentUser } = useContext(AuthContext);
+  const route = useRoute<any>();
+  const navigation = useNavigation<any>();
+
+  const wineToEdit: Wine | undefined = route.params?.wine;
 
   const [wineMaker, setWineMaker] = useState("");
   const [wineName, setWineName] = useState("");
@@ -33,6 +43,23 @@ export default function HomeScreen() {
   const [notes, setNotes] = useState("");
   const [labelImage, setLabelImage] = useState<string | null>(null);
   const [showTypePicker, setShowTypePicker] = useState(false);
+  const [editingId, setEditingId] = useState<string | null>(null);
+
+  // Pre-fill when editing
+  useEffect(() => {
+    if (wineToEdit) {
+      setEditingId(wineToEdit.id);
+      setWineMaker(wineToEdit.wineMaker);
+      setWineName(wineToEdit.wineName);
+      setGrape(wineToEdit.grape);
+      setType(wineToEdit.type);
+      setYear(wineToEdit.year != null ? String(wineToEdit.year) : "");
+      setRating(wineToEdit.rating != null ? String(wineToEdit.rating) : "");
+      setRegion(wineToEdit.region);
+      setNotes(wineToEdit.notes);
+      setLabelImage(wineToEdit.labelImage ?? null);
+    }
+  }, [wineToEdit]);
 
   const resetForm = () => {
     setWineMaker("");
@@ -46,7 +73,7 @@ export default function HomeScreen() {
     setLabelImage(null);
   };
 
-  const handleAddWine = async () => {
+  const handleSaveWine = async () => {
     if (!currentUser) {
       Alert.alert("Error", "User not logged in.");
       return;
@@ -66,17 +93,30 @@ export default function HomeScreen() {
       userId: uid,
       synced: false,
       timestamp: new Date().toISOString(),
+      ...(editingId ? { id: editingId } : {}),
     };
 
-    await saveWineToStorage(wine);
+    if (editingId) {
+      // Update existing wine
+      const all = await getWinesFromStorage();
+      const updated = all.map((w: Wine) =>
+        w.id === editingId ? { ...w, ...wine } : w
+      );
+      await updateWinesInStorage(updated);
+    } else {
+      // Save new wine
+      await saveWineToStorage(wine);
+    }
 
     const state = await NetInfo.fetch();
     if (state.isConnected) {
       await syncWines();
     }
 
-    Alert.alert("Success", "Wine saved!");
+    Alert.alert("Success", editingId ? "Wine updated!" : "Wine saved!");
     resetForm();
+    setEditingId(null);
+    navigation.navigate("MyCellar", { disableSwipe: true });
   };
 
   const onTakePhoto = async () => {
@@ -163,8 +203,10 @@ export default function HomeScreen() {
             </TouchableOpacity>
           </View>
 
-          <TouchableOpacity style={styles.button} onPress={handleAddWine}>
-            <Text style={styles.buttonText}>ADD WINE</Text>
+          <TouchableOpacity style={styles.button} onPress={handleSaveWine}>
+            <Text style={styles.buttonText}>
+              {editingId ? "SAVE CHANGES" : "ADD WINE"}
+            </Text>
           </TouchableOpacity>
 
           <View style={styles.bottomPadding} />
