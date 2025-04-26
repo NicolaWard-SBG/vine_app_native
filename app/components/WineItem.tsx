@@ -1,5 +1,12 @@
-import React from "react";
-import { View, Text, Image, Button, StyleSheet } from "react-native";
+import React, { useState } from "react";
+import {
+  View,
+  Text,
+  Image,
+  Button,
+  StyleSheet,
+  ActivityIndicator,
+} from "react-native";
 import { Swipeable } from "react-native-gesture-handler";
 import colors from "../assets/colors/colors";
 import { Wine } from "../../types";
@@ -15,6 +22,8 @@ export const WineItem: React.FC<WineItemProps> = ({
   onDelete,
   onEdit,
 }) => {
+  const [imageLoading, setImageLoading] = useState(false);
+
   const renderLeftActions = () => (
     <View style={styles.editButtonContainer}>
       <Button title="Edit" color="white" onPress={() => onEdit(wine)} />
@@ -34,11 +43,29 @@ export const WineItem: React.FC<WineItemProps> = ({
         renderRightActions={renderRightActions}
       >
         <View style={styles.wineItem}>
-          {wine.labelImage && (
-            <Image
-              source={{ uri: wine.labelImage }}
-              style={styles.wineLabelImage}
-            />
+          {wine.labelImage ? (
+            <View style={styles.imageContainer}>
+              {imageLoading && (
+                <ActivityIndicator
+                  style={styles.loadingIndicator}
+                  color={colors.faluRed}
+                  size="small"
+                />
+              )}
+              <Image
+                source={{ uri: wine.labelImage }}
+                style={styles.wineLabelImage}
+                onLoadStart={() => setImageLoading(true)}
+                onLoadEnd={() => setImageLoading(false)}
+                // Progressive loading using resizeMode="cover"
+                // and lower initial quality for faster rendering
+                resizeMode="cover"
+              />
+            </View>
+          ) : (
+            <View style={[styles.wineLabelImage, styles.noImage]}>
+              <Text style={styles.noImageText}>No Image</Text>
+            </View>
           )}
           <View style={styles.wineInfo}>
             <Text>{wine.wineMaker}</Text>
@@ -47,8 +74,12 @@ export const WineItem: React.FC<WineItemProps> = ({
             <Text>{wine.type}</Text>
             <Text>{wine.year}</Text>
             <Text>{wine.rating}</Text>
-            <Text>{wine.region}</Text>
-            <Text>{wine.notes}</Text>
+            <Text numberOfLines={1} ellipsizeMode="tail">
+              {wine.region}
+            </Text>
+            <Text numberOfLines={1} ellipsizeMode="tail">
+              {wine.notes}
+            </Text>
           </View>
         </View>
       </Swipeable>
@@ -78,11 +109,32 @@ const styles = StyleSheet.create({
     fontSize: 18,
     fontWeight: "bold",
   },
+  imageContainer: {
+    position: "relative",
+    width: 80,
+    height: 80,
+    marginRight: 10,
+  },
   wineLabelImage: {
     width: 80,
     height: 80,
     marginRight: 10,
     borderRadius: 8,
+  },
+  loadingIndicator: {
+    position: "absolute",
+    top: 30,
+    left: 30,
+    zIndex: 1,
+  },
+  noImage: {
+    backgroundColor: "#e0e0e0",
+    justifyContent: "center",
+    alignItems: "center",
+  },
+  noImageText: {
+    color: "#777",
+    fontSize: 12,
   },
   editButtonContainer: {
     justifyContent: "center",

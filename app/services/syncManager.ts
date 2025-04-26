@@ -15,9 +15,35 @@ import {
 } from "firebase/storage";
 import * as FileSystem from "expo-file-system";
 import * as MediaLibrary from "expo-media-library";
+import * as ImageManipulator from "expo-image-manipulator";
 import { auth, db } from "./firebaseConfig";
 import { getWinesFromStorage, updateWinesInStorage } from "./storage";
 import { Wine } from "../../types";
+
+// Helper function to ensure image is properly compressed before upload
+async function ensureCompressedImage(imageUrl: string): Promise<string> {
+  try {
+    // Check file size
+    const fileInfo = await FileSystem.getInfoAsync(imageUrl);
+
+    // If file is already small enough (less than 200KB), don't compress further
+    if (fileInfo.exists && fileInfo.size < 200 * 1024) {
+      return imageUrl;
+    }
+
+    // Apply compression for larger files
+    const result = await ImageManipulator.manipulateAsync(
+      imageUrl,
+      [{ resize: { width: 600, height: 800 } }],
+      { compress: 0.6, format: ImageManipulator.SaveFormat.JPEG }
+    );
+
+    return result.uri;
+  } catch (error) {
+    console.error("Compression check failed:", error);
+    return imageUrl; // Return original if compression fails
+  }
+}
 
 export const syncWines = async (): Promise<void> => {
   if (!auth.currentUser) return;
@@ -42,6 +68,9 @@ export const syncWines = async (): Promise<void> => {
         imageUrl = localPath;
       }
 
+      // Ensure image is compressed before upload
+      imageUrl = await ensureCompressedImage(imageUrl);
+
       try {
         // Read the file into a blob
         const response = await fetch(imageUrl);
@@ -63,6 +92,7 @@ export const syncWines = async (): Promise<void> => {
       }
     }
 
+    // Rest of your syncWines function remains the same...
     // 2) Write the Firestore document with that URL
     try {
       const { synced, ...wineData } = wine;

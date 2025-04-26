@@ -1,4 +1,5 @@
 import * as ImagePicker from "expo-image-picker";
+import * as ImageManipulator from "expo-image-manipulator";
 import { Alert } from "react-native";
 
 async function ensurePermissions() {
@@ -24,7 +25,27 @@ async function ensurePermissions() {
 }
 
 /**
- * Launch the camera and return a single image URI (or null if cancelled).
+ * Compress and resize an image to reduce file size
+ * @param uri Original image URI
+ * @returns Compressed image URI
+ */
+async function compressImage(uri: string): Promise<string> {
+  try {
+    // Resize to 600x800 max dimensions and compress to 70% quality
+    const result = await ImageManipulator.manipulateAsync(
+      uri,
+      [{ resize: { width: 600, height: 800 } }],
+      { compress: 0.7, format: ImageManipulator.SaveFormat.JPEG }
+    );
+    return result.uri;
+  } catch (error) {
+    console.error("Image compression failed:", error);
+    return uri; // Return original if compression fails
+  }
+}
+
+/**
+ * Launch the camera and return a compressed image URI (or null if cancelled).
  */
 export async function takePhoto(): Promise<string | null> {
   const ok = await ensurePermissions();
@@ -36,11 +57,15 @@ export async function takePhoto(): Promise<string | null> {
     aspect: [4, 3],
     quality: 0.5,
   });
-  return result.canceled || !result.assets.length ? null : result.assets[0].uri;
+
+  if (result.canceled || !result.assets.length) return null;
+
+  // Apply additional compression to the selected image
+  return await compressImage(result.assets[0].uri);
 }
 
 /**
- * Launch the image library and return a single image URI (or null if cancelled).
+ * Launch the image library and return a compressed image URI (or null if cancelled).
  */
 export async function pickFromLibrary(): Promise<string | null> {
   const ok = await ensurePermissions();
@@ -52,5 +77,9 @@ export async function pickFromLibrary(): Promise<string | null> {
     aspect: [4, 3],
     quality: 0.5,
   });
-  return result.canceled || !result.assets.length ? null : result.assets[0].uri;
+
+  if (result.canceled || !result.assets.length) return null;
+
+  // Apply additional compression to the selected image
+  return await compressImage(result.assets[0].uri);
 }
