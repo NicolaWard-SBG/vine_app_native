@@ -35,6 +35,7 @@ export const WineTypeModal: React.FC<WineTypeModalProps> = ({
           <Picker.Item label="Red" value="Red" />
           <Picker.Item label="White" value="White" />
           <Picker.Item label="Rose" value="Rose" />
+          <Picker.Item label="Orange" value="Orange" />
           <Picker.Item label="Sparkling" value="Sparkling" />
           <Picker.Item label="Fortified" value="Fortified" />
         </Picker>

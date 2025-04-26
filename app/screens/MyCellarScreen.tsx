@@ -4,9 +4,10 @@ import {
   Text,
   FlatList,
   StyleSheet,
-  Button,
   Alert,
   SafeAreaView,
+  ScrollView,
+  TouchableOpacity,
 } from "react-native";
 import {
   useFocusEffect,
@@ -28,7 +29,15 @@ import { AuthStackParamList } from "../navigation/AppNavigator";
 
 type MyCellarNavProp = StackNavigationProp<AuthStackParamList, "MyCellar">;
 
-const FILTER_TYPES = ["All", "Red", "White", "Rose", "Sparkling", "Fortified"];
+const FILTER_TYPES = [
+  "All",
+  "Red",
+  "White",
+  "Rose",
+  "Orange",
+  "Sparkling",
+  "Fortified",
+];
 
 function MyCellar() {
   const navigation = useNavigation<MyCellarNavProp>();
@@ -37,29 +46,21 @@ function MyCellar() {
   const { wines, refetch } = useWines(filterType);
   const { currentUser } = useContext(AuthContext);
 
-  // Create a ref to store references to swipeable components
   const swipeableRefs = useRef<Map<string, any>>(new Map());
 
-  // Refresh data when screen comes into focus
   useFocusEffect(
     useCallback(() => {
       refetch();
-
-      // Close all open swipeables when screen comes into focus
-      // This is especially important when returning from edit screen
       const routeParams = route.params as
         | { disableSwipe?: boolean }
         | undefined;
       if (routeParams?.disableSwipe) {
         closeAllSwipeables();
       }
-
-      // Return a cleanup function
       return () => {};
     }, [refetch, route.params])
   );
 
-  // Function to close all open swipeables
   const closeAllSwipeables = () => {
     swipeableRefs.current.forEach((ref) => {
       if (ref && ref.close) {
@@ -68,7 +69,6 @@ function MyCellar() {
     });
   };
 
-  // Save reference to swipeable component
   const saveSwipeableRef = (id: string, ref: any) => {
     if (ref) {
       swipeableRefs.current.set(id, ref);
@@ -80,15 +80,11 @@ function MyCellar() {
       Alert.alert("Error", "No user is logged in.");
       return;
     }
-
-    // Find the wine to be deleted
     const wineToDelete = wines.find((wine) => wine.id === id);
-
     if (!wineToDelete) {
       Alert.alert("Error", "Wine not found.");
       return;
     }
-
     Alert.alert("Delete Wine", "Are you sure you want to delete this wine?", [
       { text: "Cancel", style: "cancel" },
       {
@@ -96,15 +92,10 @@ function MyCellar() {
         style: "destructive",
         onPress: async () => {
           try {
-            // Delete from local storage
             await deleteWineFromStorage(id);
-
-            // If the wine has been synced to Firebase, delete it there too
             if (wineToDelete.synced) {
               await deleteWineFromFirebase(wineToDelete.id);
             }
-
-            // Refresh the wines list after deletion
             refetch();
             Alert.alert("Success", "Wine deleted successfully.");
           } catch (error) {
@@ -116,16 +107,12 @@ function MyCellar() {
     ]);
   };
 
-  // Pull-to-refresh functionality to FlatList
   const [refreshing, setRefreshing] = useState(false);
 
   const onRefresh = useCallback(async () => {
     setRefreshing(true);
-    // First fetch from Firebase to ensure we have latest data
     await fetchUserWines();
-    // Then refresh local display
     await refetch();
-    // Close any open swipeables
     closeAllSwipeables();
     setRefreshing(false);
   }, [refetch]);
@@ -135,7 +122,6 @@ function MyCellar() {
       wine={item}
       onDelete={deleteWine}
       onEdit={(wine) => {
-        // Close all swipeables before navigating
         closeAllSwipeables();
         navigation.navigate("Home", { wine });
       }}
@@ -146,19 +132,35 @@ function MyCellar() {
   return (
     <SafeAreaView style={styles.safeArea}>
       <View style={styles.container}>
-        {/* Render filter buttons */}
         <View style={styles.filterContainer}>
-          {FILTER_TYPES.map((type) => (
-            <Button
-              key={type}
-              title={type}
-              onPress={() => {
-                setFilterType(type === "All" ? null : type);
-                // Close any open swipeables when changing filters
-                closeAllSwipeables();
-              }}
-            />
-          ))}
+          <ScrollView
+            horizontal
+            showsHorizontalScrollIndicator={false}
+            contentContainerStyle={styles.chipScroll}
+          >
+            {FILTER_TYPES.map((type) => {
+              const isSelected = (filterType || "All") === type;
+              return (
+                <TouchableOpacity
+                  key={type}
+                  style={[styles.chip, isSelected && styles.chipSelected]}
+                  onPress={() => {
+                    setFilterType(type === "All" ? null : type);
+                    closeAllSwipeables();
+                  }}
+                >
+                  <Text
+                    style={[
+                      styles.chipText,
+                      isSelected && styles.chipTextSelected,
+                    ]}
+                  >
+                    {type}
+                  </Text>
+                </TouchableOpacity>
+              );
+            })}
+          </ScrollView>
         </View>
 
         {wines.length === 0 ? (
@@ -189,9 +191,26 @@ const styles = StyleSheet.create({
     backgroundColor: colors.seashell,
   },
   filterContainer: {
-    flexDirection: "row",
-    justifyContent: "space-around",
     marginBottom: 16,
+  },
+  chipScroll: {
+    paddingHorizontal: 2,
+  },
+  chip: {
+    paddingVertical: 8,
+    paddingHorizontal: 16,
+    borderRadius: 12,
+    marginRight: 6,
+  },
+  chipSelected: {
+    backgroundColor: colors.faluRed,
+  },
+  chipText: {
+    fontSize: 14,
+    color: colors.faluRed,
+  },
+  chipTextSelected: {
+    color: "#fff",
   },
   emptyMessage: {
     textAlign: "center",

@@ -22,7 +22,7 @@ export const WineItem: React.FC<WineItemProps> = ({
   wine,
   onDelete,
   onEdit,
-  swipeableRef, // Receive the ref function
+  swipeableRef,
 }) => {
   const [imageLoading, setImageLoading] = useState(false);
 
@@ -41,7 +41,7 @@ export const WineItem: React.FC<WineItemProps> = ({
   return (
     <View style={styles.swipeableItemWrapper}>
       <Swipeable
-        ref={swipeableRef} // Assign the ref
+        ref={swipeableRef}
         renderLeftActions={renderLeftActions}
         renderRightActions={renderRightActions}
       >
