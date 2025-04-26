@@ -113,7 +113,7 @@ const styles = StyleSheet.create({
   imageContainer: {
     position: "relative",
     width: 80,
-    height: 80,
+    height: 120,
     marginRight: 10,
   },
   wineLabelImage: {
@@ -121,6 +121,7 @@ const styles = StyleSheet.create({
     height: 80,
     marginRight: 10,
     borderRadius: 8,
+    resizeMode: "cover",
   },
   loadingIndicator: {
     position: "absolute",
