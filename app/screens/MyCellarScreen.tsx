@@ -43,7 +43,8 @@ function MyCellar() {
   const navigation = useNavigation<MyCellarNavProp>();
   const route = useRoute();
   const [filterType, setFilterType] = useState<string | null>(null);
-  const { wines, refetch } = useWines(filterType);
+  const [selectedFoodTags, setSelectedFoodTags] = useState<string[]>([]);
+  const { wines, refetch } = useWines(filterType, selectedFoodTags);
   const { currentUser } = useContext(AuthContext);
 
   const swipeableRefs = useRef<Map<string, any>>(new Map());
@@ -129,6 +130,10 @@ function MyCellar() {
     />
   );
 
+  const allFoodTags = Array.from(
+    new Set(wines.flatMap((w) => w.foodPairings || []))
+  );
+
   return (
     <SafeAreaView style={styles.safeArea}>
       <View style={styles.container}>
@@ -136,16 +141,21 @@ function MyCellar() {
           <ScrollView
             horizontal
             showsHorizontalScrollIndicator={false}
+            style={{ marginTop: 8 }}
             contentContainerStyle={styles.chipScroll}
           >
-            {FILTER_TYPES.map((type) => {
-              const isSelected = (filterType || "All") === type;
+            {allFoodTags.map((tag) => {
+              const isSelected = selectedFoodTags.includes(tag);
               return (
                 <TouchableOpacity
-                  key={type}
+                  key={tag}
                   style={[styles.chip, isSelected && styles.chipSelected]}
                   onPress={() => {
-                    setFilterType(type === "All" ? null : type);
+                    setSelectedFoodTags((prev) =>
+                      isSelected
+                        ? prev.filter((t) => t !== tag)
+                        : [...prev, tag]
+                    );
                     closeAllSwipeables();
                   }}
                 >
@@ -155,7 +165,7 @@ function MyCellar() {
                       isSelected && styles.chipTextSelected,
                     ]}
                   >
-                    {type}
+                    {tag}
                   </Text>
                 </TouchableOpacity>
               );

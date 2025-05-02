@@ -9,6 +9,7 @@ import {
   Image,
   StyleSheet,
   Alert,
+  TextInput,
   View,
 } from "react-native";
 import NetInfo from "@react-native-community/netinfo";
@@ -41,6 +42,8 @@ export default function HomeScreen() {
   const [rating, setRating] = useState("");
   const [region, setRegion] = useState("");
   const [notes, setNotes] = useState("");
+  const [tagInput, setTagInput] = useState("");
+  const [foodPairings, setFoodPairings] = useState<string[]>([]);
   const [labelImage, setLabelImage] = useState<string | null>(null);
   const [showTypePicker, setShowTypePicker] = useState(false);
   const [editingId, setEditingId] = useState<string | null>(null);
@@ -57,6 +60,7 @@ export default function HomeScreen() {
       setRating(wineToEdit.rating != null ? String(wineToEdit.rating) : "");
       setRegion(wineToEdit.region);
       setNotes(wineToEdit.notes);
+      setFoodPairings(wineToEdit.foodPairings || []);
       setLabelImage(wineToEdit.labelImage ?? null);
     }
   }, [wineToEdit]);
@@ -70,6 +74,7 @@ export default function HomeScreen() {
     setRating("");
     setRegion("");
     setNotes("");
+    setFoodPairings([]);
     setLabelImage(null);
   };
 
@@ -89,6 +94,7 @@ export default function HomeScreen() {
       rating: parseFloat(rating),
       region,
       notes,
+      foodPairings,
       labelImage,
       userId: uid,
       synced: false,
@@ -181,6 +187,43 @@ export default function HomeScreen() {
             value={region}
             onChangeText={setRegion}
           />
+          <View style={styles.tagInputContainer}>
+            <ScrollView
+              horizontal
+              showsHorizontalScrollIndicator={false}
+              contentContainerStyle={{
+                flexDirection: "row",
+                alignItems: "center",
+              }}
+            >
+              {foodPairings.map((tag) => (
+                <View key={tag} style={styles.tag}>
+                  <Text style={styles.tagText}>{tag}</Text>
+                  <TouchableOpacity
+                    onPress={() =>
+                      setFoodPairings((fp) => fp.filter((t) => t !== tag))
+                    }
+                  >
+                    <Text style={styles.removeTag}>×</Text>
+                  </TouchableOpacity>
+                </View>
+              ))}
+              <TextInput
+                style={styles.tagTextInput}
+                placeholder="Add food pairing"
+                value={tagInput}
+                onChangeText={setTagInput}
+                onSubmitEditing={() => {
+                  const newTag = tagInput.trim();
+                  if (newTag && !foodPairings.includes(newTag)) {
+                    setFoodPairings((fp) => [...fp, newTag]);
+                  }
+                  setTagInput("");
+                }}
+                blurOnSubmit={false}
+              />
+            </ScrollView>
+          </View>
           <FormInput
             placeholder="Notes"
             value={notes}
@@ -274,4 +317,25 @@ const styles = StyleSheet.create({
     paddingHorizontal: 8,
   },
   bottomPadding: { height: 20 },
+  tagInputContainer: {
+    marginVertical: 12,
+  },
+  tag: {
+    flexDirection: "row",
+    backgroundColor: "#eee",
+    borderRadius: 16,
+    paddingHorizontal: 8,
+    paddingVertical: 4,
+    alignItems: "center",
+    marginRight: 6,
+  },
+  tagText: { marginRight: 4 },
+  removeTag: { fontSize: 16, lineHeight: 16 },
+  tagTextInput: {
+    minWidth: 100,
+    paddingHorizontal: 8,
+    paddingVertical: 4,
+    borderBottomWidth: 1,
+    borderColor: "#ccc",
+  },
 });

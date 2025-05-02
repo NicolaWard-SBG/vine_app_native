@@ -3,7 +3,10 @@ import { getWinesFromStorage } from "../services/storage";
 import { AuthContext } from "../contexts/AuthContext";
 import { Wine } from "../../types";
 
-export const useWines = (filterType: string | null) => {
+export const useWines = (
+  filterType: string | null,
+  selectedFoodTags: string[] = []
+) => {
   const { currentUser } = useContext(AuthContext);
   const [wines, setWines] = useState<Wine[]>([]);
 
@@ -14,17 +17,19 @@ export const useWines = (filterType: string | null) => {
     }
     try {
       const localWines: Wine[] = await getWinesFromStorage();
-      const filtered: Wine[] = localWines.filter(
+      const filtered = localWines.filter(
         (w: Wine) =>
           w.userId === currentUser.id &&
-          (filterType ? w.type === filterType : true)
+          (filterType ? w.type === filterType : true) &&
+          (selectedFoodTags.length === 0 ||
+            selectedFoodTags.every((tag) => w.foodPairings?.includes(tag)))
       );
       setWines(filtered);
     } catch (error) {
       console.error("Error loading wines:", error);
       setWines([]);
     }
-  }, [filterType, currentUser]);
+  }, [filterType, selectedFoodTags, currentUser]);
 
   useEffect(() => {
     fetchWines();

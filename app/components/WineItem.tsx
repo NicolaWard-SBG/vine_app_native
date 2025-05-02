@@ -81,6 +81,13 @@ export const WineItem: React.FC<WineItemProps> = ({
             <Text numberOfLines={1} ellipsizeMode="tail">
               {wine.notes}
             </Text>
+            <View style={styles.tagRow}>
+              {(wine.foodPairings || []).map((tag) => (
+                <View key={tag} style={styles.itemTag}>
+                  <Text style={styles.itemTagText}>{tag}</Text>
+                </View>
+              ))}
+            </View>
           </View>
         </View>
       </Swipeable>
@@ -154,4 +161,14 @@ const styles = StyleSheet.create({
     borderTopRightRadius: 16,
     borderBottomRightRadius: 16,
   },
+  tagRow: { flexDirection: "row", flexWrap: "wrap", marginTop: 4 },
+  itemTag: {
+    backgroundColor: "#ddd",
+    borderRadius: 12,
+    paddingHorizontal: 6,
+    paddingVertical: 2,
+    marginRight: 4,
+    marginBottom: 4,
+  },
+  itemTagText: { fontSize: 12 },
 });

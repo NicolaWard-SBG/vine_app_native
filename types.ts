@@ -10,6 +10,7 @@ export interface Wine {
   rating: string;
   region: string;
   notes: string;
+  foodPairings: string[];
   labelImage?: string;
   synced?: boolean;
   userId?: string;
