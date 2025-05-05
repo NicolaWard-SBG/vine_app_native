@@ -6,7 +6,6 @@ import {
   StyleSheet,
   Alert,
   SafeAreaView,
-  ScrollView,
   TouchableOpacity,
 } from "react-native";
 import {
@@ -24,12 +23,13 @@ import {
   fetchUserWines,
 } from "../services/syncManager";
 import { WineItem } from "../components/WineItem";
+import FilterDrawer, { FilterDrawerProps } from "../components/FilterDrawer";
 import { StackNavigationProp } from "@react-navigation/stack";
 import { AuthStackParamList } from "../navigation/AppNavigator";
 
 type MyCellarNavProp = StackNavigationProp<AuthStackParamList, "MyCellar">;
-
-const FILTER_TYPES = [
+// your static type list
+const TYPE_OPTIONS = [
   "All",
   "Red",
   "White",
@@ -39,49 +39,53 @@ const FILTER_TYPES = [
   "Fortified",
 ];
 
-function MyCellar() {
+export default function MyCellar() {
+  const { currentUser } = useContext(AuthContext);
   const navigation = useNavigation<MyCellarNavProp>();
   const route = useRoute();
+
+  // UI state
+  const [filterVisible, setFilterVisible] = useState(false);
   const [filterType, setFilterType] = useState<string | null>(null);
   const [selectedFoodTags, setSelectedFoodTags] = useState<string[]>([]);
-  const { wines, refetch } = useWines(filterType, selectedFoodTags);
-  const { currentUser } = useContext(AuthContext);
 
+  // data
+  const { wines, refetch } = useWines(filterType, selectedFoodTags);
+
+  // swipe & refresh helpers
   const swipeableRefs = useRef<Map<string, any>>(new Map());
+  const closeAllSwipeables = () =>
+    swipeableRefs.current.forEach((r) => r?.close?.());
+  const saveSwipeableRef = (id: string, ref: any) => {
+    if (ref) swipeableRefs.current.set(id, ref);
+  };
+
+  const onRefresh = useCallback(async () => {
+    await fetchUserWines();
+    await refetch();
+    closeAllSwipeables();
+  }, [refetch]);
 
   useFocusEffect(
     useCallback(() => {
       refetch();
-      const routeParams = route.params as
-        | { disableSwipe?: boolean }
-        | undefined;
-      if (routeParams?.disableSwipe) {
-        closeAllSwipeables();
-      }
-      return () => {};
+      const params = (route.params as { disableSwipe?: boolean }) || {};
+      if (params.disableSwipe) closeAllSwipeables();
     }, [refetch, route.params])
   );
 
-  const closeAllSwipeables = () => {
-    swipeableRefs.current.forEach((ref) => {
-      if (ref && ref.close) {
-        ref.close();
-      }
-    });
-  };
+  // collect all tags
+  const allFoodTags = Array.from(
+    new Set(wines.flatMap((w) => w.foodPairings || []))
+  );
 
-  const saveSwipeableRef = (id: string, ref: any) => {
-    if (ref) {
-      swipeableRefs.current.set(id, ref);
-    }
-  };
-
+  // delete handler unchanged
   const deleteWine = async (id: string) => {
     if (!currentUser?.id) {
       Alert.alert("Error", "No user is logged in.");
       return;
     }
-    const wineToDelete = wines.find((wine) => wine.id === id);
+    const wineToDelete = wines.find((w) => w.id === id);
     if (!wineToDelete) {
       Alert.alert("Error", "Wine not found.");
       return;
@@ -97,26 +101,16 @@ function MyCellar() {
             if (wineToDelete.synced) {
               await deleteWineFromFirebase(wineToDelete.id);
             }
-            refetch();
+            await refetch();
             Alert.alert("Success", "Wine deleted successfully.");
           } catch (error) {
-            console.error("Error deleting wine:", error);
+            console.error(error);
             Alert.alert("Error", "Could not delete wine. Please try again.");
           }
         },
       },
     ]);
   };
-
-  const [refreshing, setRefreshing] = useState(false);
-
-  const onRefresh = useCallback(async () => {
-    setRefreshing(true);
-    await fetchUserWines();
-    await refetch();
-    closeAllSwipeables();
-    setRefreshing(false);
-  }, [refetch]);
 
   const renderWineItem = ({ item }: { item: Wine }) => (
     <WineItem
@@ -130,47 +124,34 @@ function MyCellar() {
     />
   );
 
-  const allFoodTags = Array.from(
-    new Set(wines.flatMap((w) => w.foodPairings || []))
+  // build the object‐arrays for the drawer
+  const drawerFilterTypes: FilterDrawerProps["filterTypes"] = TYPE_OPTIONS.map(
+    (type) => ({
+      key: type,
+      label: type,
+      // "All" means no filter, so selected when filterType===null
+      selected: type === "All" ? filterType === null : filterType === type,
+    })
+  );
+
+  const drawerFoodTags: FilterDrawerProps["allFoodTags"] = allFoodTags.map(
+    (tag) => ({
+      key: tag,
+      label: tag,
+      selected: selectedFoodTags.includes(tag),
+    })
   );
 
   return (
     <SafeAreaView style={styles.safeArea}>
       <View style={styles.container}>
-        <View style={styles.filterContainer}>
-          <ScrollView
-            horizontal
-            showsHorizontalScrollIndicator={false}
-            style={{ marginTop: 8 }}
-            contentContainerStyle={styles.chipScroll}
+        <View style={styles.filterButtonContainer}>
+          <TouchableOpacity
+            onPress={() => setFilterVisible(true)}
+            style={styles.filterButton}
           >
-            {allFoodTags.map((tag) => {
-              const isSelected = selectedFoodTags.includes(tag);
-              return (
-                <TouchableOpacity
-                  key={tag}
-                  style={[styles.chip, isSelected && styles.chipSelected]}
-                  onPress={() => {
-                    setSelectedFoodTags((prev) =>
-                      isSelected
-                        ? prev.filter((t) => t !== tag)
-                        : [...prev, tag]
-                    );
-                    closeAllSwipeables();
-                  }}
-                >
-                  <Text
-                    style={[
-                      styles.chipText,
-                      isSelected && styles.chipTextSelected,
-                    ]}
-                  >
-                    {tag}
-                  </Text>
-                </TouchableOpacity>
-              );
-            })}
-          </ScrollView>
+            <Text style={styles.filterButtonText}>Filter</Text>
+          </TouchableOpacity>
         </View>
 
         {wines.length === 0 ? (
@@ -178,56 +159,69 @@ function MyCellar() {
         ) : (
           <FlatList
             data={wines}
-            keyExtractor={(item) => item.id.toString()}
+            keyExtractor={(item) => item.id}
             renderItem={renderWineItem}
-            refreshing={refreshing}
+            refreshing={false}
             onRefresh={onRefresh}
             onScrollBeginDrag={closeAllSwipeables}
+            contentContainerStyle={styles.listContentContainer}
           />
         )}
+
+        <FilterDrawer
+          visible={filterVisible}
+          onClose={() => {
+            setFilterVisible(false);
+            closeAllSwipeables();
+            refetch();
+          }}
+          filterTypes={drawerFilterTypes}
+          onToggleType={(key) => {
+            setFilterType((prev) => (prev === key ? null : key));
+            closeAllSwipeables();
+          }}
+          allFoodTags={drawerFoodTags}
+          onToggleTag={(key) => {
+            setSelectedFoodTags((prev) =>
+              prev.includes(key)
+                ? prev.filter((t) => t !== key)
+                : [...prev, key]
+            );
+            closeAllSwipeables();
+          }}
+          onClear={() => {
+            setFilterType(null);
+            setSelectedFoodTags([]);
+            closeAllSwipeables();
+            refetch();
+          }}
+          onApply={() => {
+            setFilterVisible(false);
+            closeAllSwipeables();
+            refetch();
+          }}
+        />
       </View>
     </SafeAreaView>
   );
 }
 
 const styles = StyleSheet.create({
-  container: {
-    flex: 1,
-    padding: 16,
-    backgroundColor: colors.seashell,
+  safeArea: { flex: 1, backgroundColor: colors.seashell },
+  container: { flex: 1, backgroundColor: colors.seashell },
+  filterButtonContainer: {
+    padding: 12,
+    alignItems: "flex-end",
   },
-  safeArea: {
-    flex: 1,
-    backgroundColor: colors.seashell,
-  },
-  filterContainer: {
-    marginBottom: 16,
-  },
-  chipScroll: {
-    paddingHorizontal: 2,
-  },
-  chip: {
-    paddingVertical: 8,
-    paddingHorizontal: 16,
-    borderRadius: 12,
-    marginRight: 6,
-  },
-  chipSelected: {
+  filterButton: {
     backgroundColor: colors.faluRed,
+    paddingHorizontal: 16,
+    paddingVertical: 8,
+    borderRadius: 8,
   },
-  chipText: {
-    fontSize: 14,
-    color: colors.faluRed,
-  },
-  chipTextSelected: {
-    color: "#fff",
-  },
-  emptyMessage: {
-    textAlign: "center",
-    fontSize: 16,
-    marginTop: 20,
-    color: "#777",
+  filterButtonText: { color: "#fff", fontSize: 16 },
+  emptyMessage: { textAlign: "center", marginTop: 20, color: "#777" },
+  listContentContainer: {
+    padding: 10,
   },
 });
-
-export default MyCellar;

@@ -106,9 +106,9 @@ const styles = StyleSheet.create({
   wineItem: {
     flexDirection: "row",
     alignItems: "center",
-    padding: 10,
     backgroundColor: "#f9f9f9",
-    height: 170,
+    paddingHorizontal: 10,
+    paddingVertical: 10,
   },
   wineInfo: {
     flex: 1,

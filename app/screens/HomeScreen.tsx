@@ -210,7 +210,7 @@ export default function HomeScreen() {
               ))}
               <TextInput
                 style={styles.tagTextInput}
-                placeholder="Add food pairing"
+                placeholder="Add food pairing tags, press enter after each"
                 value={tagInput}
                 onChangeText={setTagInput}
                 onSubmitEditing={() => {
