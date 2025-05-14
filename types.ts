@@ -9,8 +9,8 @@ export interface Wine {
   year: number;
   rating: string;
   region: string;
-  notes: string;
   foodPairings: string[];
+  attributeTags: string[];
   labelImage?: string;
   synced?: boolean;
   userId?: string;
@@ -21,3 +21,33 @@ export interface User {
   password: string;
   email: string | null;
 }
+
+export const FOOD_TAG_OPTIONS = [
+  "Cheese",
+  "Seafood",
+  "Red Meat",
+  "Poultry",
+  "Spicy",
+  "Dessert",
+  "Fruits",
+  "Vegetarian",
+  "Chocolate",
+  "Pizza",
+  "Pasta",
+] as const;
+
+export type FoodTag = (typeof FOOD_TAG_OPTIONS)[number];
+
+export const ATTRIBUTE_TAG_OPTIONS = [
+  "Organic",
+  "Biodynamic",
+  "Sustainable",
+  "Natural",
+  "Low-Sulfites",
+  "Female-Owned",
+  "Family-Owned",
+  "LGBTQ+-Owned",
+  "Single-Vineyard",
+  "Reserve",
+] as const;
+export type AttributeTag = (typeof ATTRIBUTE_TAG_OPTIONS)[number];

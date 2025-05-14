@@ -5,7 +5,7 @@
     "scheme": "vine-app",
     "version": "1.0.0",
     "orientation": "portrait",
-    "icon": "./app/assets/logos/VineAppIcon.png",
+    "icon": "./app/assets/logos/Vine_App_Icon.png",
     "userInterfaceStyle": "light",
     "newArchEnabled": true,
     "splash": {
@@ -33,10 +33,31 @@
       "bundler": "metro",
       "output": "server"
     },
-    "expo": {
-      "entryPoint": "./node_modules/expo-router/entry"
-    },
-    "plugins": ["expo-sqlite", "expo-asset", "expo-router"],
+    "entryPoint": "./node_modules/expo-router/entry",
+    "plugins": [
+      "expo-sqlite",
+      "expo-asset",
+      "expo-router",
+      [
+        "expo-font",
+        {
+          "fonts": [
+            {
+              "asset": "./app/assets/fonts/CelsiusFlower.ttf",
+              "family": "CelsiusFlower",
+              "weight": "400",
+              "style": "normal"
+            },
+            {
+              "asset": "./app/assets/fonts/Montserrat-VariableFont_wght.ttf",
+              "family": "Montserrat",
+              "weight": "400",
+              "style": "normal"
+            }
+          ]
+        }
+      ]
+    ],
     "extra": {
       "eas": {
         "projectId": "fe0a3f67-737b-41e1-9f01-e0c418c3be00"

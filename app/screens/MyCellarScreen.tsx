@@ -26,6 +26,7 @@ import { WineItem } from "../components/WineItem";
 import FilterDrawer, { FilterDrawerProps } from "../components/FilterDrawer";
 import { StackNavigationProp } from "@react-navigation/stack";
 import { AuthStackParamList } from "../navigation/AppNavigator";
+import { Ionicons } from "@expo/vector-icons"; // Import Ionicons
 
 type MyCellarNavProp = StackNavigationProp<AuthStackParamList, "MyCellar">;
 // your static type list
@@ -48,6 +49,9 @@ export default function MyCellar() {
   const [filterVisible, setFilterVisible] = useState(false);
   const [filterType, setFilterType] = useState<string | null>(null);
   const [selectedFoodTags, setSelectedFoodTags] = useState<string[]>([]);
+  const [selectedAttributeTags, setSelectedAttributeTags] = useState<string[]>(
+    []
+  );
 
   // data
   const { wines, refetch } = useWines(filterType, selectedFoodTags);
@@ -77,6 +81,10 @@ export default function MyCellar() {
   // collect all tags
   const allFoodTags = Array.from(
     new Set(wines.flatMap((w) => w.foodPairings || []))
+  );
+
+  const allAttributeTags = Array.from(
+    new Set(wines.flatMap((w) => w.attributeTags || []))
   );
 
   // delete handler unchanged
@@ -142,6 +150,30 @@ export default function MyCellar() {
     })
   );
 
+  const drawerAttributeTags: FilterDrawerProps["allAttributeTags"] =
+    allAttributeTags.map((tag) => ({
+      key: tag,
+      label: tag,
+      selected: selectedAttributeTags.includes(tag),
+    }));
+
+  // Handle tag toggling based on which section it belongs to
+  const handleToggleTag = (key: string) => {
+    // Check if it's a food tag
+    if (allFoodTags.includes(key)) {
+      setSelectedFoodTags((prev) =>
+        prev.includes(key) ? prev.filter((t) => t !== key) : [...prev, key]
+      );
+    }
+    // Otherwise it's an attribute tag
+    else if (allAttributeTags.includes(key)) {
+      setSelectedAttributeTags((prev) =>
+        prev.includes(key) ? prev.filter((t) => t !== key) : [...prev, key]
+      );
+    }
+    closeAllSwipeables();
+  };
+
   return (
     <SafeAreaView style={styles.safeArea}>
       <View style={styles.container}>
@@ -150,7 +182,8 @@ export default function MyCellar() {
             onPress={() => setFilterVisible(true)}
             style={styles.filterButton}
           >
-            <Text style={styles.filterButtonText}>Filter</Text>
+            <Ionicons name="filter" size={20} color="#fff" />
+            <Text style={styles.filterButtonText}> Filter</Text>
           </TouchableOpacity>
         </View>
 
@@ -181,17 +214,12 @@ export default function MyCellar() {
             closeAllSwipeables();
           }}
           allFoodTags={drawerFoodTags}
-          onToggleTag={(key) => {
-            setSelectedFoodTags((prev) =>
-              prev.includes(key)
-                ? prev.filter((t) => t !== key)
-                : [...prev, key]
-            );
-            closeAllSwipeables();
-          }}
+          allAttributeTags={drawerAttributeTags}
+          onToggleTag={handleToggleTag}
           onClear={() => {
             setFilterType(null);
             setSelectedFoodTags([]);
+            setSelectedAttributeTags([]);
             closeAllSwipeables();
             refetch();
           }}
@@ -214,12 +242,19 @@ const styles = StyleSheet.create({
     alignItems: "flex-end",
   },
   filterButton: {
+    flexDirection: "row",
+    alignItems: "center",
     backgroundColor: colors.faluRed,
     paddingHorizontal: 16,
     paddingVertical: 8,
     borderRadius: 8,
   },
-  filterButtonText: { color: "#fff", fontSize: 16 },
+  filterButtonText: {
+    color: "#fff",
+    fontSize: 16,
+    fontFamily: "Montserrat",
+    fontWeight: "600",
+  },
   emptyMessage: { textAlign: "center", marginTop: 20, color: "#777" },
   listContentContainer: {
     padding: 10,

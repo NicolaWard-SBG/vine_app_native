@@ -18,6 +18,7 @@ export interface FilterDrawerProps {
   filterTypes: { key: string; label: string; selected: boolean }[];
   onToggleType: (key: string) => void;
   allFoodTags: { key: string; label: string; selected: boolean }[];
+  allAttributeTags: { key: string; label: string; selected: boolean }[];
   onToggleTag: (key: string) => void;
   onClear: () => void;
   onApply: () => void;
@@ -29,6 +30,7 @@ export default function FilterDrawer({
   filterTypes,
   onToggleType,
   allFoodTags,
+  allAttributeTags,
   onToggleTag,
   onClear,
   onApply,
@@ -98,6 +100,27 @@ export default function FilterDrawer({
           </View>
           <View style={styles.separator} />
 
+          {/* Attribute Tags */}
+          <Text style={[styles.sectionTitle, { marginTop: 16 }]}>
+            Wine Attributes
+          </Text>
+          <View style={styles.chipContainer}>
+            {allAttributeTags.map((t) => (
+              <TouchableOpacity
+                key={t.key}
+                style={[styles.chip, t.selected && styles.chipSelected]}
+                onPress={() => onToggleTag(t.key)}
+              >
+                <Text
+                  style={t.selected ? styles.chipTextSelected : styles.chipText}
+                >
+                  {t.label}
+                </Text>
+              </TouchableOpacity>
+            ))}
+          </View>
+          <View style={styles.separator} />
+
           {/* Footer */}
           <View style={styles.footer}>
             <TouchableOpacity onPress={onClear}>
@@ -139,7 +162,12 @@ const styles = StyleSheet.create({
     alignSelf: "flex-start",
     marginBottom: 16,
   },
-  sectionTitle: { fontSize: 16, fontWeight: "600", marginBottom: 8 },
+  sectionTitle: {
+    fontSize: 22,
+    fontWeight: "600",
+    marginBottom: 8,
+    fontFamily: "CelsiusFlower",
+  },
   chipContainer: {
     flexDirection: "row",
     flexWrap: "wrap",
@@ -171,12 +199,19 @@ const styles = StyleSheet.create({
     justifyContent: "space-between",
     marginTop: 24,
   },
-  clearText: { fontSize: 16, color: "#8b0000" },
-  applyBtn: {
-    backgroundColor: "#8b0000",
+  clearText: {
+    fontSize: 16,
+    color: colors.white,
+    backgroundColor: colors.melon,
     borderRadius: 4,
     paddingHorizontal: 20,
     paddingVertical: 8,
   },
-  applyText: { color: "#fff", fontSize: 16, fontWeight: "600" },
+  applyBtn: {
+    backgroundColor: colors.faluRed,
+    borderRadius: 4,
+    paddingHorizontal: 20,
+    paddingVertical: 8,
+  },
+  applyText: { color: colors.white, fontSize: 16, fontWeight: "600" },
 });

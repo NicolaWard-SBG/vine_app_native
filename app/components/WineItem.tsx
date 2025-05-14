@@ -69,21 +69,29 @@ export const WineItem: React.FC<WineItemProps> = ({
             </View>
           )}
           <View style={styles.wineInfo}>
-            <Text>{wine.wineMaker}</Text>
+            <Text style={styles.wineInfoText}>{wine.wineMaker}</Text>
             <Text style={styles.wineName}>{wine.wineName}</Text>
-            <Text>{wine.grape}</Text>
-            <Text>{wine.type}</Text>
-            <Text>{wine.year}</Text>
-            <Text>{wine.rating}</Text>
-            <Text numberOfLines={1} ellipsizeMode="tail">
+            <Text style={styles.wineInfoText}>{wine.grape}</Text>
+            <Text style={styles.wineInfoText}>{wine.type}</Text>
+            <Text style={styles.wineInfoText}>{wine.year}</Text>
+            <Text style={styles.wineInfoText}>{wine.rating}</Text>
+            <Text
+              style={styles.wineInfoText}
+              numberOfLines={1}
+              ellipsizeMode="tail"
+            >
               {wine.region}
-            </Text>
-            <Text numberOfLines={1} ellipsizeMode="tail">
-              {wine.notes}
             </Text>
             <View style={styles.tagRow}>
               {(wine.foodPairings || []).map((tag) => (
-                <View key={tag} style={styles.itemTag}>
+                <View key={tag} style={styles.foodTag}>
+                  <Text style={styles.itemTagText}>{tag}</Text>
+                </View>
+              ))}
+            </View>
+            <View style={styles.tagRow}>
+              {(wine.attributeTags || []).map((tag) => (
+                <View key={tag} style={styles.attributeTag}>
                   <Text style={styles.itemTagText}>{tag}</Text>
                 </View>
               ))}
@@ -113,9 +121,14 @@ const styles = StyleSheet.create({
   wineInfo: {
     flex: 1,
   },
+  wineInfoText: {
+    fontFamily: "Montserrat",
+    fontSize: 14,
+    color: "#333",
+  },
   wineName: {
-    fontSize: 18,
-    fontWeight: "bold",
+    fontFamily: "CelsiusFlower",
+    fontSize: 20,
   },
   imageContainer: {
     position: "relative",
@@ -162,13 +175,21 @@ const styles = StyleSheet.create({
     borderBottomRightRadius: 16,
   },
   tagRow: { flexDirection: "row", flexWrap: "wrap", marginTop: 4 },
-  itemTag: {
-    backgroundColor: "#ddd",
+  foodTag: {
+    backgroundColor: colors.seashell,
+    borderRadius: 12,
+    paddingHorizontal: 8,
+    paddingVertical: 2,
+    marginRight: 4,
+    marginBottom: 2,
+  },
+  attributeTag: {
+    backgroundColor: colors.tangerine,
     borderRadius: 12,
     paddingHorizontal: 6,
     paddingVertical: 2,
     marginRight: 4,
-    marginBottom: 4,
+    marginBottom: 2,
   },
   itemTagText: { fontSize: 12 },
 });

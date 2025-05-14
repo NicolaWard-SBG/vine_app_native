@@ -3,6 +3,7 @@ import { View, Text, Image, StyleSheet, TouchableOpacity } from "react-native";
 import { useNavigation } from "@react-navigation/native";
 import { StackNavigationProp } from "@react-navigation/stack";
 import colors from "../assets/colors/colors";
+import { LinearGradient } from "expo-linear-gradient";
 
 type AuthStackParamList = {
   Welcome: undefined;
@@ -27,10 +28,15 @@ export default function WelcomeScreen() {
   };
 
   return (
-    <View style={styles.container}>
+    <LinearGradient
+      colors={[colors.seashell, colors.melon]}
+      start={{ x: 0, y: 0 }}
+      end={{ x: 1, y: 2 }}
+      style={styles.container}
+    >
       <Image
-        source={require("../assets/logos/VineBottleLogo_Black.gif")}
-        style={styles.bottleImage}
+        source={require("../assets/logos/Vine_App_Logo.png")}
+        style={styles.vineLogo}
       />
       <View style={styles.buttonContainer}>
         <TouchableOpacity
@@ -46,7 +52,7 @@ export default function WelcomeScreen() {
           <Text style={styles.buttonText}>GET STARTED</Text>
         </TouchableOpacity>
       </View>
-    </View>
+    </LinearGradient>
   );
 }
 
@@ -56,21 +62,13 @@ const styles = StyleSheet.create({
     backgroundColor: colors.seashell,
     alignItems: "center",
     justifyContent: "center",
-    padding: 16,
   },
-  bottleImage: {
-    width: 300,
-    height: 300,
-    marginBottom: 24,
+  vineLogo: {
+    marginTop: 40,
+    width: "100%",
     resizeMode: "contain",
   },
-  title: {
-    fontSize: 28,
-    fontWeight: "bold",
-    marginBottom: 24,
-    color: "#333",
-    textAlign: "center",
-  },
+
   buttonContainer: {
     width: "100%",
     flexDirection: "row",
@@ -84,15 +82,17 @@ const styles = StyleSheet.create({
     alignItems: "center",
     justifyContent: "center",
     marginHorizontal: 10,
+    borderRadius: 16,
   },
   getStartedButton: {
-    backgroundColor: colors.melon,
+    backgroundColor: colors.faluRed,
     paddingVertical: 12,
     paddingHorizontal: 20,
     width: 150,
     alignItems: "center",
     justifyContent: "center",
     marginHorizontal: 10,
+    borderRadius: 16,
   },
   buttonText: {
     color: "#FFF",

@@ -28,6 +28,7 @@ export default function App() {
       try {
         await Font.loadAsync({
           Montserrat: require("./app/assets/fonts/Montserrat-VariableFont_wght.ttf"),
+          CelsiusFlower: require("./app/assets/fonts/Celsius-Flower.ttf"),
         });
         setFontsLoaded(true);
       } catch (error) {

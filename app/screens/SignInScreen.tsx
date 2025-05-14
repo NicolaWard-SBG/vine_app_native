@@ -19,6 +19,7 @@ import Ionicons from "react-native-vector-icons/Ionicons";
 import { AuthContext } from "../contexts/AuthContext";
 import { auth } from "../services/firebaseConfig";
 import { signInWithEmailAndPassword } from "firebase/auth";
+import colors from "../assets/colors/colors";
 
 export default function SignIn() {
   const navigation = useNavigation();
@@ -63,17 +64,18 @@ export default function SignIn() {
               <Ionicons name="arrow-back" size={24} color="black" />
             </TouchableOpacity>
 
-            <View style={styles.imageContainer}>
+            <View style={styles.titleAndImageContainer}>
+              <Text style={styles.title}>
+                Welcome{"\n"}Wine{"\n"}Lover.
+              </Text>
               <Image
-                source={require("../assets/logos/VineBottles.png")}
+                source={require("../assets/logos/Four_Glasses_Image.png")}
                 style={styles.wineBottles}
                 resizeMode="contain"
               />
             </View>
 
             <View style={styles.formContainer}>
-              <Text style={styles.titleOne}>WELCOME</Text>
-              <Text style={styles.titleTwo}>WINE LOVER.</Text>
               <TextInput
                 placeholder="Email"
                 value={email}
@@ -104,53 +106,70 @@ export default function SignIn() {
 const styles = StyleSheet.create({
   container: {
     flex: 1,
-    backgroundColor: "#FDF2F0",
+    backgroundColor: colors.seashell,
   },
   scrollContainer: {
     flexGrow: 1,
     padding: 16,
   },
   backButton: {
-    marginVertical: 16,
-  },
-  imageContainer: {
+    width: 48,
+    height: 48,
+    backgroundColor: colors.white,
     alignItems: "center",
     justifyContent: "center",
-    marginBottom: 10,
+    borderRadius: 16,
+  },
+  titleAndImageContainer: {
+    position: "relative",
+    marginTop: 60,
+    height: 390,
+    padding: 16,
   },
   wineBottles: {
     width: "100%",
     height: 240,
+    position: "absolute",
+    bottom: 0,
+    left: 0,
+    right: 0,
+    zIndex: 2,
+    resizeMode: "contain",
   },
   formContainer: {
     flex: 1,
+    marginTop: -20,
   },
-  titleOne: {
-    fontSize: 24,
+  title: {
+    fontSize: 75,
     fontWeight: "bold",
-    fontFamily: "Montserrat",
-  },
-  titleTwo: {
-    fontSize: 24,
-    fontWeight: "bold",
-    marginBottom: 16,
-    fontFamily: "Montserrat",
+    fontFamily: "CelsiusFlower",
+    textAlign: "left",
+    lineHeight: 55,
+    position: "absolute",
+    top: 0,
+    left: 0,
+    zIndex: 1,
+    paddingTop: 20,
   },
   input: {
     height: 40,
     borderColor: "#ccc",
     borderWidth: 1,
     paddingHorizontal: 10,
-    marginBottom: 12,
+    marginBottom: 8,
     backgroundColor: "#f9f9f9",
+    borderRadius: 16,
+    zIndex: 2,
   },
   button: {
-    backgroundColor: "#000",
+    backgroundColor: colors.faluRed,
     paddingVertical: 12,
     paddingHorizontal: 20,
     alignItems: "center",
     justifyContent: "center",
     marginBottom: 20,
+    borderRadius: 16,
   },
   buttonText: {
     color: "#FFF",
