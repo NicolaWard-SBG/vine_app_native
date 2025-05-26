@@ -17,7 +17,11 @@ import { AuthContext } from "../contexts/AuthContext";
 import colors from "../assets/colors/colors";
 import { Wine } from "../../types";
 import { useWines } from "../hooks/useWines";
-import { deleteWineFromStorage } from "../services/storage";
+import {
+  deleteWineFromStorage,
+  updateWinesInStorage,
+  getWinesFromStorage,
+} from "../services/storage";
 import {
   deleteWineFromFirebase,
   fetchUserWines,
@@ -26,9 +30,10 @@ import { WineItem } from "../components/WineItem";
 import FilterDrawer, { FilterDrawerProps } from "../components/FilterDrawer";
 import { StackNavigationProp } from "@react-navigation/stack";
 import { AuthStackParamList } from "../navigation/AppNavigator";
-import { Ionicons } from "@expo/vector-icons"; // Import Ionicons
+import { Ionicons } from "@expo/vector-icons";
 
 type MyCellarNavProp = StackNavigationProp<AuthStackParamList, "MyCellar">;
+
 // your static type list
 const TYPE_OPTIONS = [
   "All",
@@ -52,9 +57,25 @@ export default function MyCellar() {
   const [selectedAttributeTags, setSelectedAttributeTags] = useState<string[]>(
     []
   );
+  const [showFavouritesOnly, setShowFavouritesOnly] = useState(false);
 
   // data
   const { wines, refetch } = useWines(filterType, selectedFoodTags);
+
+  // Apply favourites filter to the wines
+  const filteredWines = showFavouritesOnly
+    ? wines.filter((wine) => wine.isFavourite === true)
+    : wines;
+
+  // Apply attribute tags filter
+  const finalFilteredWines =
+    selectedAttributeTags.length > 0
+      ? filteredWines.filter((wine) =>
+          selectedAttributeTags.every((tag) =>
+            wine.attributeTags?.includes(tag)
+          )
+        )
+      : filteredWines;
 
   // swipe & refresh helpers
   const swipeableRefs = useRef<Map<string, any>>(new Map());
@@ -77,6 +98,26 @@ export default function MyCellar() {
       if (params.disableSwipe) closeAllSwipeables();
     }, [refetch, route.params])
   );
+
+  // Toggle favourite status
+  const toggleFavourite = async (wineId: string) => {
+    try {
+      const allWines = await getWinesFromStorage();
+      const updatedWines = allWines.map((wine: Wine) =>
+        wine.id === wineId
+          ? { ...wine, isFavourite: !wine.isFavourite, synced: false }
+          : wine
+      );
+      await updateWinesInStorage(updatedWines);
+      await refetch();
+    } catch (error) {
+      console.error("Error toggling favourite:", error);
+      Alert.alert(
+        "Error",
+        "Could not update favourite status. Please try again."
+      );
+    }
+  };
 
   // collect all tags
   const allFoodTags = Array.from(
@@ -128,6 +169,7 @@ export default function MyCellar() {
         closeAllSwipeables();
         navigation.navigate("Home", { wine });
       }}
+      onToggleFavourite={toggleFavourite}
       swipeableRef={(ref) => saveSwipeableRef(item.id, ref)}
     />
   );
@@ -187,11 +229,15 @@ export default function MyCellar() {
           </TouchableOpacity>
         </View>
 
-        {wines.length === 0 ? (
-          <Text style={styles.emptyMessage}>No wines found.</Text>
+        {finalFilteredWines.length === 0 ? (
+          <Text style={styles.emptyMessage}>
+            {showFavouritesOnly
+              ? "No favourite wines found."
+              : "No wines found."}
+          </Text>
         ) : (
           <FlatList
-            data={wines}
+            data={finalFilteredWines}
             keyExtractor={(item) => item.id}
             renderItem={renderWineItem}
             refreshing={false}
@@ -210,16 +256,22 @@ export default function MyCellar() {
           }}
           filterTypes={drawerFilterTypes}
           onToggleType={(key) => {
-            setFilterType((prev) => (prev === key ? null : key));
+            setFilterType(key === "All" ? null : key);
             closeAllSwipeables();
           }}
           allFoodTags={drawerFoodTags}
           allAttributeTags={drawerAttributeTags}
           onToggleTag={handleToggleTag}
+          showFavouritesOnly={showFavouritesOnly}
+          onToggleFavourites={() => {
+            setShowFavouritesOnly(!showFavouritesOnly);
+            closeAllSwipeables();
+          }}
           onClear={() => {
             setFilterType(null);
             setSelectedFoodTags([]);
             setSelectedAttributeTags([]);
+            setShowFavouritesOnly(false);
             closeAllSwipeables();
             refetch();
           }}

@@ -1,9 +1,10 @@
 import React, { useEffect, useContext } from "react";
-import { View, Alert } from "react-native";
+import { View, Alert, Image } from "react-native";
 import { createBottomTabNavigator } from "@react-navigation/bottom-tabs";
 import { createStackNavigator } from "@react-navigation/stack";
 import { useNavigation, NavigationProp } from "@react-navigation/native";
 import Icon from "react-native-vector-icons/MaterialCommunityIcons";
+import colors from "../assets/colors/colors";
 
 import HomeScreen from "../screens/HomeScreen";
 import MyCellarScreen from "../screens/MyCellarScreen";
@@ -63,7 +64,13 @@ export function MainApp() {
     <Tab.Navigator
       screenOptions={{
         headerShown: false,
-        tabBarStyle: { backgroundColor: "#FEF6F3", borderTopWidth: 0 },
+        tabBarStyle: {
+          backgroundColor: colors.seashell,
+          borderTopWidth: 0,
+          height: 80,
+        },
+        tabBarActiveTintColor: colors.faluRed,
+        tabBarInactiveTintColor: "#aaa",
       }}
     >
       <Tab.Screen
@@ -84,6 +91,7 @@ export function MainApp() {
           ),
         }}
       />
+
       <Tab.Screen
         name="Logout"
         component={LogoutScreen}

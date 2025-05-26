@@ -20,6 +20,7 @@ export const saveWineToStorage = async (wineData: any) => {
     ...wineData,
     id,
     synced: false,
+    isFavourite: false,
   };
 
   // Persist locally with that ID

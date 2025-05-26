@@ -6,6 +6,7 @@ import {
   TouchableOpacity,
   TouchableWithoutFeedback,
   Text,
+  Image,
   StyleSheet,
   SafeAreaView,
 } from "react-native";
@@ -20,6 +21,8 @@ export interface FilterDrawerProps {
   allFoodTags: { key: string; label: string; selected: boolean }[];
   allAttributeTags: { key: string; label: string; selected: boolean }[];
   onToggleTag: (key: string) => void;
+  showFavouritesOnly: boolean; // Add this prop
+  onToggleFavourites: () => void; // Add this prop
   onClear: () => void;
   onApply: () => void;
 }
@@ -32,6 +35,8 @@ export default function FilterDrawer({
   allFoodTags,
   allAttributeTags,
   onToggleTag,
+  showFavouritesOnly,
+  onToggleFavourites,
   onClear,
   onApply,
 }: FilterDrawerProps) {
@@ -59,6 +64,22 @@ export default function FilterDrawer({
           <TouchableOpacity onPress={onClose} style={styles.backButton}>
             <Ionicons name="arrow-back" size={24} color="#8b0000" />
           </TouchableOpacity>
+
+          {/* Favourites Section */}
+          <Text style={styles.sectionTitle}>Favourites</Text>
+          <TouchableOpacity
+            style={[styles.chip, showFavouritesOnly && styles.chipSelected]}
+            onPress={onToggleFavourites}
+          >
+            <Text
+              style={
+                showFavouritesOnly ? styles.chipTextSelected : styles.chipText
+              }
+            >
+              Show Favourites Only
+            </Text>
+          </TouchableOpacity>
+          <View style={styles.separator} />
 
           {/* Wine Type Section */}
           <Text style={styles.sectionTitle}>Wine Type</Text>
@@ -189,6 +210,17 @@ const styles = StyleSheet.create({
   },
   chipText: { color: "#333" },
   chipTextSelected: { color: "#fff" },
+  favouriteChip: {
+    flexDirection: "row",
+    alignItems: "center",
+    alignSelf: "flex-start",
+    paddingHorizontal: 12,
+    paddingVertical: 8,
+    borderRadius: 10,
+    borderWidth: 1,
+    borderColor: "#aaa",
+    marginBottom: 8,
+  },
   separator: {
     height: 1,
     backgroundColor: colors.oxfordBlue,

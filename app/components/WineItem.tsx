@@ -6,8 +6,10 @@ import {
   Button,
   StyleSheet,
   ActivityIndicator,
+  TouchableOpacity,
 } from "react-native";
 import { Swipeable } from "react-native-gesture-handler";
+import { Ionicons } from "@expo/vector-icons";
 import colors from "../assets/colors/colors";
 import { Wine } from "../../types";
 
@@ -15,13 +17,15 @@ export interface WineItemProps {
   wine: Wine;
   onDelete: (id: string) => void;
   onEdit: (wine: Wine) => void;
-  swipeableRef?: (ref: any) => void; // Add this prop
+  onToggleFavourite: (id: string) => void; // Add this new prop
+  swipeableRef?: (ref: any) => void;
 }
 
 export const WineItem: React.FC<WineItemProps> = ({
   wine,
   onDelete,
   onEdit,
+  onToggleFavourite,
   swipeableRef,
 }) => {
   const [imageLoading, setImageLoading] = useState(false);
@@ -69,8 +73,30 @@ export const WineItem: React.FC<WineItemProps> = ({
             </View>
           )}
           <View style={styles.wineInfo}>
-            <Text style={styles.wineInfoText}>{wine.wineMaker}</Text>
-            <Text style={styles.wineName}>{wine.wineName}</Text>
+            <View style={styles.wineHeader}>
+              <View style={styles.wineHeaderText}>
+                <Text style={styles.wineInfoText}>{wine.wineMaker}</Text>
+                <Text style={styles.wineName}>{wine.wineName}</Text>
+              </View>
+              <TouchableOpacity
+                style={styles.favouriteButton}
+                onPress={() => onToggleFavourite(wine.id)}
+              >
+                <TouchableOpacity
+                  style={styles.favouriteButton}
+                  onPress={() => onToggleFavourite(wine.id)}
+                >
+                  <Image
+                    source={
+                      wine.isFavourite
+                        ? require("../assets/icons/FavouritesIcon.png")
+                        : require("../assets/icons/FavouritesIconOutline.png") // Outline icon for not favourite
+                    }
+                    style={styles.favouriteIcon}
+                  />
+                </TouchableOpacity>
+              </TouchableOpacity>
+            </View>
             <Text style={styles.wineInfoText}>{wine.grape}</Text>
             <Text style={styles.wineInfoText}>{wine.type}</Text>
             <Text style={styles.wineInfoText}>{wine.year}</Text>
@@ -120,6 +146,19 @@ const styles = StyleSheet.create({
   },
   wineInfo: {
     flex: 1,
+  },
+  wineHeader: {
+    flexDirection: "row",
+    justifyContent: "space-between",
+    alignItems: "flex-start",
+    marginBottom: 4,
+  },
+  wineHeaderText: {
+    flex: 1,
+  },
+  favouriteButton: {
+    padding: 4,
+    marginLeft: 8,
   },
   wineInfoText: {
     fontFamily: "Montserrat",
@@ -192,4 +231,9 @@ const styles = StyleSheet.create({
     marginBottom: 2,
   },
   itemTagText: { fontSize: 12 },
+  favouriteIcon: {
+    width: 20,
+    height: 20,
+    resizeMode: "contain",
+  },
 });

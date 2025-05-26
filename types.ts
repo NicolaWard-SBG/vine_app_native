@@ -14,6 +14,7 @@ export interface Wine {
   labelImage?: string;
   synced?: boolean;
   userId?: string;
+  isFavourite?: boolean;
 }
 export interface User {
   id: string;
