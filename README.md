@@ -17,8 +17,8 @@
 ---
 
 ## Screenshots
-![App Screenshots](./resources/screenshots/app-screenshot.png)
-![Feature Demo](./resources/screenshots/feature-demo.png)
+![App Screenshots](./resources/screenshots/welcome-screen.png) (./resources/screenshots/home-screen.png)
+![Feature Demo](./resources/screenshots/simulator_recording_user_journey.png)
 
 ## Demo Video
 ![Demo Video](./resources/videos/app-demo.mp4)
