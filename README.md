@@ -17,7 +17,7 @@
 ---
 ## Demo Video
 
-![Video Demo](./resources/screenshots/simulator-recording-user-journey.gif)
+![Video Demo](https://github.com/NicolaWard-SBG/vine_app_native/resources/screenshots/simulator-recording-user-journey.gif?raw=true)
 
 ---
 
