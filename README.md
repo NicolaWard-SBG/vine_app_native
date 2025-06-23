@@ -16,6 +16,15 @@
 
 ---
 
+## Screenshots
+![App Screenshots](./resources/screenshots/app-screenshot.png)
+![Feature Demo](./resources/screenshots/feature-demo.png)
+
+## Demo Video
+![Demo Video](./resources/videos/app-demo.mp4)
+
+---
+
 ## 🚀 Quick Start
 
 ### 📦 Requirements
