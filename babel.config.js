@@ -8,7 +8,6 @@ module.exports = function (api) {
 module.exports = {
   presets: ["babel-preset-expo"],
   plugins: [
-    // ...other plugins...
     [
       "module:react-native-dotenv",
       {
