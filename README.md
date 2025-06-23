@@ -16,6 +16,7 @@
 
 ---
 ## Demo Video
+
 ![Video Demo](./resources/screenshots/simulator-recording-user-journey.gif)
 
 ---
