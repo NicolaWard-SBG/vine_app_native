@@ -59,7 +59,7 @@ export default function MyCellar() {
   );
   const [showFavouritesOnly, setShowFavouritesOnly] = useState(false);
 
-  // data
+  // Data
   const { wines, refetch } = useWines(filterType, selectedFoodTags);
 
   // Apply favourites filter to the wines
@@ -77,7 +77,7 @@ export default function MyCellar() {
         )
       : filteredWines;
 
-  // swipe & refresh helpers
+  // Swipe & refresh helpers
   const swipeableRefs = useRef<Map<string, any>>(new Map());
   const closeAllSwipeables = () =>
     swipeableRefs.current.forEach((r) => r?.close?.());
@@ -128,7 +128,7 @@ export default function MyCellar() {
     new Set(wines.flatMap((w) => w.attributeTags || []))
   );
 
-  // delete handler unchanged
+  // Delete wine handler
   const deleteWine = async (id: string) => {
     if (!currentUser?.id) {
       Alert.alert("Error", "No user is logged in.");
@@ -174,7 +174,7 @@ export default function MyCellar() {
     />
   );
 
-  // build the object‐arrays for the drawer
+  // Build the object‐arrays for the drawer
   const drawerFilterTypes: FilterDrawerProps["filterTypes"] = TYPE_OPTIONS.map(
     (type) => ({
       key: type,

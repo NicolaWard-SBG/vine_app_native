@@ -70,11 +70,13 @@ export default function FilterDrawer({
           <TouchableOpacity
             style={[styles.chip, showFavouritesOnly && styles.chipSelected]}
             onPress={onToggleFavourites}
+            testID="favourites-chip"
           >
             <Text
               style={
                 showFavouritesOnly ? styles.chipTextSelected : styles.chipText
               }
+              testID="favourites-chip-text"
             >
               Show Favourites Only
             </Text>
@@ -82,13 +84,16 @@ export default function FilterDrawer({
           <View style={styles.separator} />
 
           {/* Wine Type Section */}
-          <Text style={styles.sectionTitle}>Wine Type</Text>
+          <Text style={styles.sectionTitle} testID="wine-type-section-title">
+            Wine Type
+          </Text>
           <View style={styles.chipContainer}>
             {filterTypes.map((f) => (
               <TouchableOpacity
                 key={f.key}
                 style={[styles.chip, f.selected && styles.chipSelected]}
                 onPress={() => onToggleType(f.key)}
+                testID="food-pairing-section-title"
               >
                 <Text
                   style={f.selected ? styles.chipTextSelected : styles.chipText}
@@ -144,7 +149,7 @@ export default function FilterDrawer({
 
           {/* Footer */}
           <View style={styles.footer}>
-            <TouchableOpacity onPress={onClear}>
+            <TouchableOpacity onPress={onClear} testID="clear-filters-btn">
               <Text style={styles.clearText}>Clear Filters</Text>
             </TouchableOpacity>
             <TouchableOpacity style={styles.applyBtn} onPress={onApply}>

@@ -68,7 +68,10 @@ export const WineItem: React.FC<WineItemProps> = ({
               />
             </View>
           ) : (
-            <View style={[styles.wineLabelImage, styles.noImage]}>
+            <View
+              style={[styles.wineLabelImage, styles.noImage]}
+              testID="wine-label-image"
+            >
               <Text style={styles.noImageText}>No Image</Text>
             </View>
           )}
@@ -76,7 +79,9 @@ export const WineItem: React.FC<WineItemProps> = ({
             <View style={styles.wineHeader}>
               <View style={styles.wineHeaderText}>
                 <Text style={styles.wineInfoText}>{wine.wineMaker}</Text>
-                <Text style={styles.wineName}>{wine.wineName}</Text>
+                <Text style={styles.wineName} testID="wine-label-name">
+                  {wine.wineName}{" "}
+                </Text>
               </View>
               <TouchableOpacity
                 style={styles.favouriteButton}
@@ -85,6 +90,7 @@ export const WineItem: React.FC<WineItemProps> = ({
                 <TouchableOpacity
                   style={styles.favouriteButton}
                   onPress={() => onToggleFavourite(wine.id)}
+                  testID="favourite-button"
                 >
                   <Image
                     source={
@@ -93,6 +99,7 @@ export const WineItem: React.FC<WineItemProps> = ({
                         : require("../assets/icons/FavouritesIconOutline.png") // Outline icon for not favourite
                     }
                     style={styles.favouriteIcon}
+                    testID="favourite-icon"
                   />
                 </TouchableOpacity>
               </TouchableOpacity>
