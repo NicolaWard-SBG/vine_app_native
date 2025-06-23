@@ -15,13 +15,8 @@
 - Responsive UI with custom fonts
 
 ---
-
-## Screenshots
-![App Screenshots](./resources/screenshots/welcome-screen.png)
-![Feature Demo](./resources/screenshots/simulator_recording_user_journey.png)
-
 ## Demo Video
-![Demo Video](./resources/videos/app-demo.mp4)
+![Video Demo](./resources/screenshots/simulator_recording_user_journey.gif)
 
 ---
 
