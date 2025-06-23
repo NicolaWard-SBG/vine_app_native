@@ -6,13 +6,13 @@
 
 ## ✨ Features
 
-- 🔐 Firebase Auth (Sign Up / Log In)
-- 📸 Label photo capture and storage
-- 🛢️ Offline-first: local SQLite database
-- 🔄 Sync with Firebase Firestore
-- 🏷️ Filter wines by type, tags, attributes, favourites
-- 🧭 Elegant navigation with persistent state
-- 🎨 Beautiful, responsive UI with custom fonts
+- Firebase Auth (Sign Up / Log In)
+- Label photo capture and storage
+- Offline-first: local SQLite database
+- Sync with Firebase Firestore
+- Filter wines by type, tags, attributes, favourites
+- Elegant navigation with persistent state
+- Responsive UI with custom fonts
 
 ---
 
